@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Environment files hold passwords and API keys: never commit them.
+# Commit the .env.example files instead (setting names, no values).
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+dist-ssr/
+
+# Logs
+logs/
+*.log
+
+# Editor and OS files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
