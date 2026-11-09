@@ -22,13 +22,21 @@ const cookieOptions = {
   path: "/"
 };
 
+// In development, include the real cause so it shows on the form.
+// In production, keep it generic so database details never leak.
+const serverErrorMessage = (error) =>
+  process.env.NODE_ENV === "production"
+    ? "Server error"
+    : `Server error: ${error.message}${error.hint ? ` (${error.hint})` : ""}`;
+
 const toPublicUser = (user) => ({
   id: user.id,
   first_name: user.first_name,
   last_name: user.last_name,
   email: user.email,
   phone: user.phone,
-  role: user.role
+  role: user.role,
+  institution: user.institution ?? null
 });
 
 const startSession = (res, user) => {
@@ -119,7 +127,7 @@ const register = async (req, res) => {
     console.error("Registration error:", error);
 
     res.status(500).json({
-      message: "Server error"
+      message: serverErrorMessage(error)
     });
   }
 };
@@ -165,7 +173,7 @@ const login = async (req, res) => {
     console.error("Login error:", error);
 
     res.status(500).json({
-      message: "Server error"
+      message: serverErrorMessage(error)
     });
   }
 };
@@ -203,7 +211,7 @@ const getCurrentUser = async (req, res) => {
     console.error("Current user error:", error);
 
     res.status(500).json({
-      message: "Server error"
+      message: serverErrorMessage(error)
     });
   }
 };

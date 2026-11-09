@@ -1,5 +1,6 @@
 const applicationModel = require("../models/applicationModel");
 const accommodationModel = require("../models/accommodationModel");
+const notificationModel = require("../models/notificationModel");
 
 // Submit an application
 const createApplication = async (req, res) => {
@@ -40,6 +41,18 @@ const createApplication = async (req, res) => {
         studentId,
         Number(accommodation_id)
       );
+
+    // Let the student know it arrived. The application is already saved,
+    // so a failed notification is logged but does not fail the request.
+    try {
+      await notificationModel.createNotification(
+        studentId,
+        application.id,
+        `We've received your application for ${accommodation.name}. We'll let you know when its status changes.`
+      );
+    } catch (notificationError) {
+      console.error("Application notification error:", notificationError.message);
+    }
 
     return res.status(201).json({
       message: "Application submitted successfully",

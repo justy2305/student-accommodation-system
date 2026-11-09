@@ -2,10 +2,12 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import GuestRoute from "./components/GuestRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthProvider from "./context/AuthProvider";
-import ComingSoon from "./pages/ComingSoon";
+import AccommodationDetails from "./pages/AccommodationDetails";
 import DashboardPlaceholder from "./pages/DashboardPlaceholder";
-import Home from "./pages/Home";
+import Explore from "./pages/Explore";
 import Login from "./pages/Login";
+import Notifications from "./pages/Notifications";
+import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import StudentDashboard from "./pages/StudentDashboard";
 import "./App.css";
@@ -15,7 +17,9 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<Home />} />
+          {/* Public: anyone can browse homes */}
+          <Route path="/" element={<Explore />} />
+          <Route path="/accommodations/:id" element={<AccommodationDetails />} />
 
           {/* Only for visitors who are not logged in */}
           <Route element={<GuestRoute />}>
@@ -26,30 +30,8 @@ function App() {
           {/* Any logged-in user */}
           <Route element={<ProtectedRoute />}>
             <Route path="/applications" element={<StudentDashboard />} />
-            <Route
-              path="/saved"
-              element={
-                <ComingSoon
-                  title="Saved homes"
-                  description="Homes you save while exploring will appear here."
-                />
-              }
-            />
-            <Route
-              path="/notifications"
-              element={
-                <ComingSoon
-                  title="Notifications"
-                  description="All updates about your applications in one place."
-                />
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ComingSoon title="My profile" description="Your personal and contact details." />
-              }
-            />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
 
           {/* Admins only */}

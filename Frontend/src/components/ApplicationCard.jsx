@@ -2,6 +2,7 @@ import { getStatusInfo } from "../utils/status";
 import { formatApplicationReference, formatDate, formatPrice } from "../utils/format";
 import { CalendarIcon, ImageIcon, MapPinIcon } from "./icons";
 import Badge from "./ui/Badge";
+import { getImageUrl } from "../utils/image";
 
 // One application on the dashboard. The progress stepper and history are added in Phase 19.
 export default function ApplicationCard({ application }) {
@@ -19,7 +20,7 @@ export default function ApplicationCard({ application }) {
         {application.accommodation_image ? (
           <img
             className="application-card__image"
-            src={application.accommodation_image}
+            src={getImageUrl(application.accommodation_image, 400)}
             alt=""
             loading="lazy"
           />

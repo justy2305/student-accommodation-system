@@ -16,6 +16,7 @@ const accommodationImageRoutes = require("./routes/accommodationImageRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/accommodations", accommodationRoutes);
 app.use("/api/accommodation-images", accommodationImageRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/users", userRoutes);
 
 // Home route
 app.get("/", (req, res) => {

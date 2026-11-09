@@ -13,9 +13,9 @@ const uploadAccommodationImage = async (req, res) => {
       });
     }
 
-    // Save the image URL in PostgreSQL
+    // Save the Cloudinary image URL (https://res.cloudinary.com/...) in PostgreSQL
     const image = await imageModel.createAccommodationImage(
-      accommodationId,
+      Number(accommodationId),
       req.file.path
     );
 

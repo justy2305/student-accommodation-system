@@ -1,7 +1,10 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  // In development, always go through the Vite proxy (/api → localhost:5000,
+  // see vite.config.js), so the browser never makes a cross-origin call and the
+  // login cookie just works. VITE_API_URL is only used for production builds.
+  baseURL: import.meta.env.DEV ? "/api" : import.meta.env.VITE_API_URL || "/api",
   // Send the httpOnly session cookie with every request
   withCredentials: true,
   timeout: 15000,

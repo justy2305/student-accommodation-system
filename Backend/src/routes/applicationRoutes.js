@@ -13,6 +13,7 @@ const {
 const {
   updateApplicationStatus,
   getApplicationStatusHistory,
+  signLease,
 } = require("../controllers/applicationStatusController");
 
 // Submit an application
@@ -35,6 +36,9 @@ router.put(
   },
   updateApplicationStatus
 );
+
+// Student signs the lease agreement for their approved application
+router.patch("/:id/sign-lease", authMiddleware, signLease);
 
 // View application status history
 router.get(

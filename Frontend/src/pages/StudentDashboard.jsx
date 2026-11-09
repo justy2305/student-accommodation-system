@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import ApplicationCard from "../components/ApplicationCard";
+import MyAccommodationCard from "../components/MyAccommodationCard";
 import StatCard from "../components/StatCard";
-import UpdatesPanel from "../components/UpdatesPanel";
-import { ArrowUpRightIcon, BellIcon, CheckCircleIcon, FileTextIcon, HeartIcon } from "../components/icons";
+import { BellIcon, CheckCircleIcon, FileTextIcon } from "../components/icons";
 import Alert from "../components/ui/Alert";
 import Button from "../components/ui/Button";
 import useAuth from "../context/useAuth";
@@ -12,6 +12,7 @@ import { getErrorMessage } from "../services/api";
 import { getMyApplications } from "../services/applicationService";
 import { getMyNotifications } from "../services/notificationService";
 import { formatDate } from "../utils/format";
+import { getLeaseProgress } from "../utils/lease";
 import { isActiveApplication } from "../utils/status";
 
 const TABS = [
@@ -82,34 +83,36 @@ export default function StudentDashboard() {
   const approvedCount = applications.filter((app) => app.status === "Approved").length;
   const unreadCount = notifications.filter((notification) => !notification.is_read).length;
 
+  // The student's current home: the newest approved application whose lease
+  // hasn't ended (or has no dates yet); otherwise their newest approved one.
+  const approvedApplications = applications.filter((app) => app.status === "Approved");
+  const currentHome =
+    approvedApplications.find(
+      (app) => !app.lease_end || getLeaseProgress(app.lease_start, app.lease_end, loadedAt)?.phase !== "ended"
+    ) ??
+    approvedApplications[0] ??
+    null;
+
+  // After signing, swap in the updated application (keeping its accommodation details)
+  const handleLeaseSigned = (updated) => {
+    setData((previous) => ({
+      ...previous,
+      applications: previous.applications.map((app) => (app.id === updated.id ? { ...app, ...updated } : app)),
+    }));
+  };
+
   const tabCounts = { active: activeApplications.length, past: pastApplications.length };
   const shownApplications = activeTab === "active" ? activeApplications : pastApplications;
   const isReady = loadState === "ready";
 
   return (
-    <DashboardLayout
-      unreadCount={unreadCount}
-      aside={
-        isReady && (
-          <>
-            <UpdatesPanel notifications={notifications} now={loadedAt} />
+    <DashboardLayout unreadCount={unreadCount}>
+      {location.state?.notice === "applied" && (
+        <Alert variant="success" title="Application sent">
+          The housing team will review it. We'll let you know here when anything changes.
+        </Alert>
+      )}
 
-            <section className="panel panel--warm" aria-labelledby="options-title">
-              <HeartIcon className="panel__icon" size={22} />
-              <h2 id="options-title" className="panel__title">
-                Keep your options open
-              </h2>
-              <p className="panel__text">
-                Browse more student homes while you wait to hear back from the housing teams.
-              </p>
-              <Link to="/" className="text-link panel__link">
-                Explore homes
-              </Link>
-            </section>
-          </>
-        )
-      }
-    >
       {location.state?.notice === "registered" && (
         <Alert variant="success" title="Your account is ready">
           Welcome to FindMyhome. You're logged in.
@@ -124,9 +127,6 @@ export default function StudentDashboard() {
             the loop.
           </p>
         </div>
-        <Link to="/" className="btn btn--secondary btn--sm">
-          Explore homes <ArrowUpRightIcon size={16} />
-        </Link>
       </div>
 
       {loadState === "loading" && <DashboardSkeleton />}
@@ -144,6 +144,10 @@ export default function StudentDashboard() {
 
       {isReady && (
         <>
+          {currentHome && (
+            <MyAccommodationCard application={currentHome} now={loadedAt} onSigned={handleLeaseSigned} />
+          )}
+
           <div className="stat-grid">
             <StatCard
               icon={FileTextIcon}

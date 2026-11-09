@@ -1,13 +1,11 @@
 import { NavLink } from "react-router-dom";
 import useAuth from "../context/useAuth";
-import { getInitials, getShortName } from "../utils/user";
-import { BellIcon, FileTextIcon, HeartIcon, MessageCircleIcon, UserIcon } from "./icons";
+import { getInitials, getRoleLabel, getShortName } from "../utils/user";
+import { BellIcon, FileTextIcon } from "./icons";
 
 const ITEMS = [
   { to: "/applications", label: "My applications", icon: FileTextIcon },
-  { to: "/saved", label: "Saved homes", icon: HeartIcon },
   { to: "/notifications", label: "Notifications", icon: BellIcon },
-  { to: "/profile", label: "My profile", icon: UserIcon },
 ];
 
 const linkClass = ({ isActive }) => `sidebar__link${isActive ? " is-active" : ""}`;
@@ -23,7 +21,7 @@ export default function Sidebar() {
         </span>
         <div>
           <p className="sidebar__name">{getShortName(user)}</p>
-          <p className="sidebar__role">{user?.role === "admin" ? "Administrator" : "Student"}</p>
+          <p className="sidebar__role">{getRoleLabel(user)}</p>
         </div>
       </div>
 
@@ -39,12 +37,6 @@ export default function Sidebar() {
           ))}
         </ul>
       </nav>
-
-      <div className="help-card">
-        <MessageCircleIcon className="help-card__icon" size={22} />
-        <p className="help-card__title">A little help settling in?</p>
-        <p>Questions about an application? Contact the housing team listed on the accommodation.</p>
-      </div>
     </div>
   );
 }

@@ -38,8 +38,21 @@ const markNotificationAsRead = async (notificationId, userId) => {
     return result.rows[0];
 };
 
+// Mark all of one user's notifications as read; returns how many changed
+const markAllNotificationsAsRead = async (userId) => {
+    const result = await pool.query(
+        `UPDATE notifications
+         SET is_read = TRUE
+         WHERE user_id = $1 AND is_read = FALSE`,
+        [userId]
+    );
+
+    return result.rowCount;
+};
+
 module.exports = {
     createNotification,
     getNotificationsByUser,
-    markNotificationAsRead
+    markNotificationAsRead,
+    markAllNotificationsAsRead
 };

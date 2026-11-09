@@ -70,6 +70,13 @@ export default function AuthProvider({ children }) {
     }
   }, []);
 
+  // After the profile is saved, so the navbar and sidebar show the new details
+  const updateUser = useCallback((fields) => {
+    setSession((current) =>
+      current.user ? { ...current, user: { ...current.user, ...fields } } : current
+    );
+  }, []);
+
   const value = useMemo(
     () => ({
       user: session.user,
@@ -78,8 +85,9 @@ export default function AuthProvider({ children }) {
       login,
       register,
       logout,
+      updateUser,
     }),
-    [session, isLoading, login, register, logout]
+    [session, isLoading, login, register, logout, updateUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

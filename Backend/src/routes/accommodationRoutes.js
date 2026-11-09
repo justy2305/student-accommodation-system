@@ -8,6 +8,7 @@ const {
   updateAccommodation,
   deleteAccommodation,
   searchAccommodations,
+  getFilterOptions,
 } = require("../controllers/accommodationController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -17,6 +18,9 @@ const router = express.Router();
 // Search and filter accommodations
 // Keep this before the /:id route
 router.get("/search", searchAccommodations);
+
+// Options for the Explore filters (also before /:id)
+router.get("/filters", getFilterOptions);
 
 // Create accommodation - protected route
 router.post("/", authMiddleware, adminMiddleware, createAccommodation);

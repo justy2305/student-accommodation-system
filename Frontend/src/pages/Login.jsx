@@ -15,6 +15,7 @@ const NOTICES = {
   loginRequired: { variant: "info", text: "Please log in to continue." },
   sessionExpired: { variant: "info", text: "Your session has expired. Please log in again." },
   loggedOut: { variant: "success", text: "You've been logged out. See you soon." },
+  loginToApply: { variant: "info", text: "Log in to apply for this home. We'll bring you straight back." },
 };
 
 export default function Login() {
@@ -68,10 +69,8 @@ export default function Login() {
   return (
     <AuthLayout
       title="Welcome back"
-      subtitle="Log in to track your applications and pick up where you left off."
       headerAction={
         <>
-          <span className="site-header__prompt">New to FindMyhome?</span>
           <Link to="/register" className="btn btn--secondary btn--sm">
             Create account
           </Link>

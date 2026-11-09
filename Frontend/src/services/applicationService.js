@@ -7,3 +7,15 @@ export async function getMyApplications() {
   const { data } = await api.get("/applications/my");
   return data.applications ?? [];
 }
+
+// POST /api/applications → apply for an accommodation as the logged-in student
+export async function applyForAccommodation(accommodationId) {
+  const { data } = await api.post("/applications", { accommodation_id: accommodationId });
+  return data.application;
+}
+
+// PATCH /api/applications/:id/sign-lease → the student signs their lease agreement
+export async function signLease(applicationId) {
+  const { data } = await api.patch(`/applications/${applicationId}/sign-lease`);
+  return data.application;
+}

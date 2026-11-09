@@ -7,7 +7,6 @@ import { BellIcon, LogOutIcon, MenuIcon, UserIcon } from "./icons";
 
 const NAV_LINKS = [
   { to: "/", label: "Explore", end: true },
-  { to: "/saved", label: "Saved" },
   { to: "/applications", label: "My applications" },
 ];
 
