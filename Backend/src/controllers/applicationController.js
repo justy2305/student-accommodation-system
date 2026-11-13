@@ -2,6 +2,7 @@ const applicationModel = require("../models/applicationModel");
 const accommodationModel = require("../models/accommodationModel");
 const notificationModel = require("../models/notificationModel");
 const { REVIEW_SECONDS, processQuietly } = require("../services/applicationReview");
+const { validateLeaseChoice } = require("../utils/leaseDates");
 
 // Statuses a student can still withdraw from
 const WITHDRAWABLE_STATUSES = ["Pending", "Under Review"];
@@ -19,13 +20,15 @@ const toId = (value) => {
 };
 
 // Submit an application
-// POST /api/applications  { accommodation_id, room_type }
+// POST /api/applications  { accommodation_id, room_type, move_in_date, lease_months }
 const createApplication = async (req, res) => {
   try {
     // The student ID comes from the verified login token
     const studentId = req.user.id;
     const accommodationId = toId(req.body.accommodation_id);
     const roomType = req.body.room_type;
+    const moveInDate = req.body.move_in_date;
+    const leaseMonths = Number(req.body.lease_months);
 
     if (!accommodationId) {
       return res.status(400).json({
@@ -36,6 +39,13 @@ const createApplication = async (req, res) => {
     if (!accommodationModel.ROOM_TYPES.includes(roomType)) {
       return res.status(400).json({
         message: `Choose a room type: ${accommodationModel.ROOM_TYPES.join(", ")}`,
+      });
+    }
+
+    const leaseError = validateLeaseChoice(moveInDate, leaseMonths);
+    if (leaseError) {
+      return res.status(400).json({
+        message: leaseError,
       });
     }
 
@@ -74,7 +84,9 @@ const createApplication = async (req, res) => {
     const application = await applicationModel.createApplication(
       studentId,
       accommodationId,
-      roomType
+      roomType,
+      moveInDate,
+      leaseMonths
     );
 
     // Let the student know it arrived. The application is already saved,

@@ -8,11 +8,14 @@ export async function getMyApplications() {
   return data.applications ?? [];
 }
 
-// POST /api/applications → apply for one room type at an accommodation
-export async function applyForAccommodation(accommodationId, roomType) {
+// POST /api/applications → apply for one room type at an accommodation,
+// with a move-in date ("YYYY-MM-DD") and lease length in months
+export async function applyForAccommodation(accommodationId, roomType, moveInDate, leaseMonths) {
   const { data } = await api.post("/applications", {
     accommodation_id: accommodationId,
     room_type: roomType,
+    move_in_date: moveInDate,
+    lease_months: leaseMonths,
   });
   return data.application;
 }

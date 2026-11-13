@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import AppHeader from "../components/AppHeader";
 import PhotoViewer from "../components/PhotoViewer";
 import SiteFooter from "../components/SiteFooter";
-import { GraduationCapIcon, ImageIcon, MailIcon, MapPinIcon, PhoneIcon, UserIcon } from "../components/icons";
+import { ImageIcon, MailIcon, MapPinIcon, PhoneIcon, UserIcon } from "../components/icons";
 import Alert from "../components/ui/Alert";
 import Button from "../components/ui/Button";
 import useAuth from "../context/useAuth";
@@ -12,13 +12,13 @@ import { getAccommodation, getAccommodationImages } from "../services/accommodat
 import { applyForAccommodation, getMyApplications } from "../services/applicationService";
 import {
   describePhoto,
-  formatDistance,
   getRoomAvailability,
   getRoomTypeLabel,
 } from "../utils/accommodation";
 import { formatPrice } from "../utils/format";
 import { getStatusInfo } from "../utils/status";
 import { getImageUrl } from "../utils/image";
+import { formatDateOnly, getDefaultMoveIn, getMoveInRange, LEASE_MONTHS } from "../utils/lease";
 
 // Accommodation details: top half of the Figma "Accommodation detail and
 // application" frame (title, photo grid, description, price card).
@@ -123,20 +123,6 @@ export default function AccommodationDetails() {
                       </li>
                     );
                   })}
-                </ul>
-              </>
-            )}
-
-            {accommodation.distances?.length > 0 && (
-              <>
-                <h2 className="details-section-title">Distance to campus</h2>
-                <ul className="distance-list">
-                  {accommodation.distances.map((item) => (
-                    <li key={item.campus}>
-                      <GraduationCapIcon size={16} />
-                      {formatDistance(item.distance_km)} to {item.campus}
-                    </li>
-                  ))}
                 </ul>
               </>
             )}
@@ -295,6 +281,10 @@ function ApplyCard({ accommodation }) {
   const firstOpen = roomTypes.find(isOpen);
 
   const [roomType, setRoomType] = useState(firstOpen?.room_type ?? "");
+  const [moveInRange] = useState(() => getMoveInRange());
+  const [moveIn, setMoveIn] = useState(() => getDefaultMoveIn());
+  const [leaseMonths, setLeaseMonths] = useState(12);
+  const isMoveInValid = Boolean(moveIn) && moveIn >= moveInRange.min && moveIn <= moveInRange.max;
   const [existing, setExisting] = useState({ key: null, application: null });
   const [isApplying, setIsApplying] = useState(false);
   const [applyError, setApplyError] = useState("");
@@ -324,11 +314,23 @@ function ApplyCard({ accommodation }) {
   }, [checkKey, accommodation.id]);
 
   const handleApply = async () => {
+    // The button always works; if something is missing, say what
+    if (!roomType) {
+      setApplyError("Choose a room first.");
+      return;
+    }
+    if (!isMoveInValid) {
+      setApplyError(
+        `Choose a move-in date from ${formatDateOnly(moveInRange.min)} to ${formatDateOnly(moveInRange.max)}.`
+      );
+      return;
+    }
+
     setApplyError("");
     setIsApplying(true);
     try {
-      await applyForAccommodation(accommodation.id, roomType);
-      navigate("/applications", { state: { notice: "applied" } });
+      await applyForAccommodation(accommodation.id, roomType, moveIn, leaseMonths);
+      navigate("/applications");
     } catch (error) {
       setApplyError(getErrorMessage(error, "We couldn't send your application. Please try again."));
       setIsApplying(false);
@@ -354,7 +356,7 @@ function ApplyCard({ accommodation }) {
           <p className="apply-card__text">Log in or create a free account to apply.</p>
           <Link
             to="/login"
-            state={{ from: `/accommodations/${accommodation.id}`, notice: "loginToApply" }}
+            state={{ from: `/accommodations/${accommodation.id}` }}
             className="btn btn--primary btn--full"
           >
             Log in to apply
@@ -416,21 +418,50 @@ function ApplyCard({ accommodation }) {
             })}
           </fieldset>
 
-          {firstOpen ? (
-            <p className="apply-card__text">
-              You'll get an automatic decision in about 2 minutes, and you can track it on your
-              dashboard.
-            </p>
-          ) : (
-            <p className="apply-card__text">All rooms here are full right now.</p>
-          )}
+          <div className="lease-choice">
+            <label className="filter-input">
+              <span className="lease-choice__label">Move-in date</span>
+              <input
+                type="date"
+                value={moveIn}
+                min={moveInRange.min}
+                max={moveInRange.max}
+                onChange={(event) => {
+                  setMoveIn(event.target.value);
+                  setApplyError("");
+                }}
+              />
+            </label>
+
+            <fieldset className="lease-choice__months">
+              <legend className="lease-choice__label">Lease length</legend>
+              <div className="chips">
+                {LEASE_MONTHS.map((months) => (
+                  <button
+                    key={months}
+                    type="button"
+                    aria-pressed={leaseMonths === months}
+                    className={`chip${leaseMonths === months ? " is-active" : ""}`}
+                    onClick={() => {
+                      setLeaseMonths(months);
+                      setApplyError("");
+                    }}
+                  >
+                    {months} months
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+
+          {!firstOpen && <p className="apply-card__text">All rooms here are full right now.</p>}
           {applyError && <Alert variant="error">{applyError}</Alert>}
           <Button
             fullWidth
             isLoading={isApplying}
             loadingText="Sending…"
             onClick={handleApply}
-            disabled={!roomType}
+            disabled={!firstOpen}
           >
             Apply for this room
           </Button>

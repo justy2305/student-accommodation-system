@@ -9,6 +9,15 @@
 // `npm run images:upload` then moves them to Cloudinary; photos already moved
 // are not added again.
 //
+// Every home has these in its rooms; they are added to each home's own facilities
+const ROOM_FACILITIES = [
+  "Wi-Fi",
+  "Individual bed",
+  "Personal cupboard",
+  "Kitchen locker",
+  "Study desk and chair",
+];
+
 // Search filters use:
 // - roomTypes: Single, Shared or Triple, with the monthly price of each
 // - facilities: what the home offers (shown as filter options on Explore).
@@ -28,9 +37,7 @@ const ACCOMMODATIONS = [
     name: "StudentStay",
     location: "Windhoek West",
     price: 4100, // lowest monthly price ("from"); single rooms are N$ 5,100
-    description:
-      "A 5-minute walk to NUST main campus and 6.5 km to UNAM. " +
-      "Shared rooms N$ 4,100 per month, single rooms N$ 5,100 per month.",
+    description: "A 5-minute walk to NUST main campus and 6.5 km to UNAM.",
     roomTypes: [
       { type: "Single", price: 5100, availableRooms: null },
       { type: "Shared", price: 4100, availableRooms: null },
@@ -43,6 +50,7 @@ const ACCOMMODATIONS = [
       "Basketball court",
       "Kitchen",
       "Bathrooms",
+      ...ROOM_FACILITIES,
     ],
     distances: { NUST: 0.4, UNAM: 6.5 },
     // Listing details: fill these in with the real information
@@ -74,7 +82,7 @@ const ACCOMMODATIONS = [
     price: 3000,
     description: "A 5-minute walk to UNAM main campus and 6.5 km to NUST.",
     roomTypes: [{ type: "Shared", price: 3000, availableRooms: null }],
-    facilities: ["Study area", "Kitchen", "Bathrooms"],
+    facilities: ["Study area", "Kitchen", "Bathrooms", ...ROOM_FACILITIES],
     distances: { UNAM: 0.4, NUST: 6.5 },
     // Listing details: fill these in with the real information
     address: null, // street address, e.g. "123 Independence Avenue, Windhoek"
@@ -93,16 +101,13 @@ const ACCOMMODATIONS = [
     name: "Capital Residence",
     location: "Independence Avenue",
     price: 3231, // lowest monthly price ("from"): triple room
-    description:
-      "A 10-minute walk to NUST main campus and 10 km to UNAM. " +
-      "Single rooms N$ 4,957, twin rooms N$ 3,241 and triple rooms N$ 3,231 per month, " +
-      "with a kitchen, bathrooms and an entertainment area.",
+    description: "A 10-minute walk to NUST main campus and 10 km to UNAM.",
     roomTypes: [
       { type: "Single", price: 4957, availableRooms: null },
       { type: "Shared", price: 3241, availableRooms: null }, // twin room
       { type: "Triple", price: 3231, availableRooms: null },
     ],
-    facilities: ["Study area", "Entertainment area", "Kitchen", "Bathrooms"],
+    facilities: ["Study area", "Entertainment area", "Kitchen", "Bathrooms", ...ROOM_FACILITIES],
     distances: { NUST: 0.8, UNAM: 10 },
     // Listing details: fill these in with the real information
     address: null, // street address, e.g. "123 Independence Avenue, Windhoek"
@@ -165,10 +170,11 @@ async function main() {
       }
       console.log(`  photos linked: ${added} new, ${accommodation.images.length} in total`);
 
-      // Facilities always follow this file; address, rules and contact are
-      // only filled in where empty
+      // Description and facilities always follow this file; address, rules
+      // and contact are only filled in where empty
       await client.query(
         `UPDATE accommodations SET
+           description = $8,
            facilities = $2,
            address = COALESCE(address, $3),
            rules = CASE WHEN cardinality(rules) = 0 THEN $4 ELSE rules END,
@@ -184,6 +190,7 @@ async function main() {
           accommodation.contact.name,
           accommodation.contact.phone,
           accommodation.contact.email,
+          accommodation.description,
         ]
       );
 

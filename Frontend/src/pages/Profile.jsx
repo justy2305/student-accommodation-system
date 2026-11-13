@@ -7,7 +7,6 @@ import TextField from "../components/ui/TextField";
 import useAuth from "../context/useAuth";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { getErrorMessage } from "../services/api";
-import { getMyNotifications } from "../services/notificationService";
 import { getMyProfile, updateMyProfile } from "../services/profileService";
 import { formatDate } from "../utils/format";
 import {
@@ -122,7 +121,6 @@ export default function Profile() {
   const [loadState, setLoadState] = useState("loading"); // loading | ready | error
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
-  const [unreadCount, setUnreadCount] = useState(0);
 
   const [errors, setErrors] = useState({});
   const [saveError, setSaveError] = useState("");
@@ -146,12 +144,6 @@ export default function Profile() {
         setLoadState("error");
       });
 
-    // Only for the bell badge in the navbar; the page works without it
-    getMyNotifications()
-      .then((notifications) => {
-        if (isCurrent) setUnreadCount(notifications.filter((item) => !item.is_read).length);
-      })
-      .catch(() => {});
 
     return () => {
       isCurrent = false;
@@ -227,7 +219,7 @@ export default function Profile() {
   };
 
   return (
-    <DashboardLayout unreadCount={unreadCount}>
+    <DashboardLayout>
       <div className="dashboard-header">
         <div>
           <h1 className="dashboard-header__title">My profile</h1>

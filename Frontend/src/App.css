@@ -68,6 +68,7 @@
   padding: 20px var(--gutter);
   font-size: 13px;
   color: var(--color-text-muted);
+  text-align: center;
 }
 
 /* ---------- Buttons ---------- */
@@ -590,31 +591,8 @@
   gap: 8px;
 }
 
-.icon-button {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  color: var(--color-text);
-}
 
-.icon-button:hover {
-  background: var(--color-surface-warm);
-}
 
-.navbar__dot {
-  position: absolute;
-  top: 8px;
-  right: 9px;
-  width: 8px;
-  height: 8px;
-  border: 2px solid var(--color-surface);
-  border-radius: 50%;
-  background: var(--color-primary);
-  box-sizing: content-box;
-}
 
 /* ---------- Account menu ---------- */
 .account-menu {
@@ -2117,34 +2095,10 @@
   color: var(--color-primary-hover);
 }
 
-.lease-progress {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
 
-.lease-progress__track {
-  height: 8px;
-  overflow: hidden;
-  border-radius: var(--radius-pill);
-  background: #eeeeee;
-}
 
-.lease-progress__bar {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--color-primary);
-}
 
-.lease-progress__bar--ended {
-  background: var(--color-text-muted);
-}
 
-.lease-progress__detail {
-  font-size: 13px;
-  color: var(--color-text-muted);
-}
 
 /* Lease agreement status */
 .agreement {
@@ -2928,3 +2882,35 @@
 .room-choice__status--full {
   color: var(--color-text-muted);
 }
+
+/* ---------- Move-in date and lease length (apply card) ---------- */
+.lease-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lease-choice__label {
+  display: block;
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.lease-choice .filter-input {
+  gap: 0;
+}
+
+.lease-choice__months {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.lease-choice__months .chips {
+  margin-top: 0;
+  gap: 8px;
+}
+

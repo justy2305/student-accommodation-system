@@ -107,6 +107,8 @@ CREATE TABLE IF NOT EXISTS applications (
                     CHECK (status IN ('Pending', 'Under Review', 'Approved', 'Rejected')),
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   room_type         VARCHAR(20),   -- Single / Shared / Triple, chosen when applying
+  move_in_date      DATE,          -- chosen when applying
+  lease_months      SMALLINT,      -- chosen when applying: 3, 6, 10 or 12
   status_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),  -- when the status last changed
   decision_reason   TEXT,          -- why it was rejected (automatic review)
   lease_start       DATE,          -- set automatically when approved
@@ -123,6 +125,18 @@ ALTER TABLE applications ADD COLUMN IF NOT EXISTS lease_signed_at TIMESTAMPTZ;
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS room_type VARCHAR(20);
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS status_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS decision_reason TEXT;
+
+-- The student's chosen move-in date and lease length
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS move_in_date DATE;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS lease_months SMALLINT;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'applications_lease_months_check') THEN
+    ALTER TABLE applications
+      ADD CONSTRAINT applications_lease_months_check CHECK (lease_months IN (3, 6, 10, 12));
+  END IF;
+END $$;
 
 DO $$
 BEGIN

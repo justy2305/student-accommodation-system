@@ -8,6 +8,7 @@ import Badge from "./ui/Badge";
 import Button from "./ui/Button";
 import { getImageUrl } from "../utils/image";
 import { getRoomTypeLabel } from "../utils/accommodation";
+import { formatDateOnly } from "../utils/lease";
 
 // Statuses a student can still withdraw from (the backend checks this too)
 const WITHDRAWABLE = ["Pending", "Under Review"];
@@ -68,6 +69,12 @@ export default function ApplicationCard({ application, onWithdrawn }) {
             <p className="application-card__price">
               {application.room_type && <>{getRoomTypeLabel(application.room_type)} · </>}
               <strong>{price}</strong> / month
+            </p>
+          )}
+          {application.move_in_date && application.lease_months && (
+            <p className="application-card__meta">
+              <CalendarIcon size={14} />
+              Move in {formatDateOnly(application.move_in_date)} · {application.lease_months} months
             </p>
           )}
           <p className="application-card__meta">

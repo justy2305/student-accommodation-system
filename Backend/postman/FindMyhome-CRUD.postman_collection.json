@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "b5131854-2c30-4c37-9eee-29bccec851a2",
     "name": "FindMyhome CRUD tests",
-    "description": "Create, read, update and delete as a student: account, profile, applications and notifications, plus the automatic review (Pending \u2192 Under Review \u2192 Approved).\n\nBefore running: start the backend (npm run dev) and make sure the homes are seeded (npm run db:seed).\n\nRun it with Collection > Run. No login details needed: it registers its own test account and deletes it at the end. Folder 4 waits about 2 minutes for the automatic decision.",
+    "description": "Create, read, update and delete as a student: account, profile, applications and notifications, including choosing a move-in date and lease length, plus the automatic review (Pending \u2192 Under Review \u2192 Approved).\n\nBefore running: start the backend (npm run dev) and make sure the homes are seeded (npm run db:seed).\n\nRun it with Collection > Run. No login details needed: it registers its own test account and deletes it at the end. Folder 4 waits about 2 minutes for the automatic decision.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -48,7 +48,11 @@
                 "exec": [
                   "// A new test account every run, so the collection needs no setup",
                   "pm.collectionVariables.set(\"email\", `postman.${Date.now()}@findmyhome.test`);",
-                  "pm.collectionVariables.set(\"password\", \"Postman12345\");"
+                  "pm.collectionVariables.set(\"password\", \"Postman12345\");",
+                  "// Move-in on the 1st of next month (within the 6-month limit)",
+                  "const now = new Date();",
+                  "const first = new Date(now.getFullYear(), now.getMonth() + 1, 1);",
+                  "pm.collectionVariables.set(\"moveInDate\", `${first.getFullYear()}-${String(first.getMonth() + 1).padStart(2, \"0\")}-01`);"
                 ]
               }
             },
@@ -360,7 +364,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\"\n}",
+              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\",\n  \"move_in_date\": \"{{moveInDate}}\",\n  \"lease_months\": 6\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -378,6 +382,7 @@
                   "const a = pm.response.json().application;",
                   "pm.test(\"Starts as Pending\", () => pm.expect(a.status).to.eql(\"Pending\"));",
                   "pm.test(\"Saved the room type\", () => pm.expect(a.room_type).to.eql(pm.collectionVariables.get(\"roomType\")));",
+                  "pm.test(\"Saved the move-in date and lease length\", () => { pm.expect(a.move_in_date).to.eql(pm.collectionVariables.get(\"moveInDate\")); pm.expect(a.lease_months).to.eql(6); });",
                   "pm.collectionVariables.set(\"applicationId\", a.id);"
                 ]
               }
@@ -405,7 +410,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\"\n}",
+              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\",\n  \"move_in_date\": \"{{moveInDate}}\",\n  \"lease_months\": 6\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -446,7 +451,48 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\"\n}",
+              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"move_in_date\": \"{{moveInDate}}\",\n  \"lease_months\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 (validation)\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CREATE with a move-in date in the past (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "applications"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\",\n  \"move_in_date\": \"2020-01-01\",\n  \"lease_months\": 6\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -604,7 +650,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\"\n}",
+              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\",\n  \"move_in_date\": \"{{moveInDate}}\",\n  \"lease_months\": 6\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -760,7 +806,13 @@
                   "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
                   "const a = pm.response.json().application;",
                   "pm.test(\"Automatically approved\", () => pm.expect(a.status).to.eql(\"Approved\"));",
-                  "pm.test(\"Lease dates were set\", () => { pm.expect(a.lease_start).to.be.a(\"string\"); pm.expect(a.lease_end).to.be.a(\"string\"); });"
+                  "pm.test(\"Lease starts on the chosen move-in date\", () => pm.expect(a.lease_start).to.eql(pm.collectionVariables.get(\"moveInDate\")));",
+                  "pm.test(\"Lease lasts 6 months\", () => {",
+                  "  const end = new Date(a.lease_end + \"T00:00:00Z\");",
+                  "  end.setUTCDate(end.getUTCDate() + 1);",
+                  "  const start = new Date(a.lease_start + \"T00:00:00Z\");",
+                  "  pm.expect((end.getUTCFullYear() - start.getUTCFullYear()) * 12 + end.getUTCMonth() - start.getUTCMonth()).to.eql(6);",
+                  "});"
                 ]
               }
             }
@@ -1021,6 +1073,10 @@
     },
     {
       "key": "notificationId",
+      "value": ""
+    },
+    {
+      "key": "moveInDate",
       "value": ""
     }
   ]

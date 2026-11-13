@@ -4,10 +4,10 @@ import SiteFooter from "../components/SiteFooter";
 
 // Navbar + three columns (sidebar | main | right column) + footer,
 // as in the Figma "Student application tracking dashboard" frame.
-export default function DashboardLayout({ unreadCount, aside, children }) {
+export default function DashboardLayout({ aside, children }) {
   return (
     <div className="page">
-      <Navbar unreadCount={unreadCount} />
+      <Navbar />
 
       <div className={`dashboard${aside ? "" : " dashboard--no-aside"}`}>
         <div className="dashboard__sidebar">

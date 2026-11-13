@@ -5,7 +5,7 @@ const APPLICATION_STATUS = {
   Pending: {
     badge: "neutral",
     label: "Pending",
-    description: "Submitted. The automatic review starts in about a minute.",
+    description: "",
   },
   "Under Review": {
     badge: "warning",

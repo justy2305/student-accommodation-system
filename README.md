@@ -9,9 +9,9 @@ A web app where students find accommodation near campus, apply for a room and tr
 1. **Register** and log in.
 2. **Search** homes on Explore by area, price, room type, availability, facilities and distance from campus.
 3. **View** a home's details, rooms and prices, facilities, rules, contact details and photos.
-4. **Apply** for a room type that has space.
+4. **Apply** for a room type that has space, choosing a move-in date (up to 6 months ahead) and a lease length of 3, 6, 10 or 12 months.
 5. **Track** the application: Pending → Under Review (after 1 minute) → a decision (after 2 minutes), with a notification at each step.
-6. **Decision:** approved if that room type still has space and the student has no other approved home; otherwise rejected, with the reason. When approved, the lease runs from the 1st of next month to 30 November, and the student signs it on the dashboard.
+6. **Decision:** approved if that room type still has space and the student has no other approved lease for overlapping dates; otherwise rejected, with the reason. When approved, the lease runs from the chosen move-in date for the chosen length (e.g. 1 Dec 2026 for 12 months ends 30 Nov 2027), and the student signs it on the dashboard.
 
 ## Project structure
 

@@ -1,5 +1,6 @@
 const pool = require("../config/database");
 const notificationModel = require("../models/notificationModel");
+const { addMonths, formatDate, getLeaseEnd, todayIso } = require("../utils/leaseDates");
 
 // Automatic application review: the system decides, not a person.
 //
@@ -12,11 +13,11 @@ const notificationModel = require("../models/notificationModel");
 // An application is approved when:
 //   1. the room type the student chose is available at that home
 //      (is_available, and not 0 free rooms), and
-//   2. the student does not already have an approved home with a lease
-//      that has not ended.
+//   2. the student does not already have an approved lease for dates that
+//      overlap the ones they chose.
 // Otherwise it is rejected, with the reason saved and sent to the student.
-// When approved, the lease runs from the 1st of next month to 30 November
-// (the end of the academic year), and one free room is taken off the count.
+// When approved, the lease runs from the student's chosen move-in date for
+// the lease length they chose, and one free room is taken off the count.
 
 const REVIEW_SECONDS = Number(process.env.APPLICATION_REVIEW_SECONDS) > 0
   ? Number(process.env.APPLICATION_REVIEW_SECONDS)
@@ -24,32 +25,18 @@ const REVIEW_SECONDS = Number(process.env.APPLICATION_REVIEW_SECONDS) > 0
 const STEP_SECONDS = REVIEW_SECONDS / 2;
 const CHECK_EVERY_MS = Math.min(15000, STEP_SECONDS * 500);
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-// "2026-12-01" → "1 Dec 2026"
-const formatDate = (isoDate) => {
-  const [year, month, day] = isoDate.split("-").map(Number);
-  return `${day} ${MONTHS[month - 1]} ${year}`;
-};
-
-const toIsoDate = (year, month, day) =>
-  `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-
-// Lease: 1st of next month to 30 November. A lease starting in November or
-// December ends on 30 November of the following year.
-const getLeaseDates = (today = new Date()) => {
-  let year = today.getFullYear();
-  let month = today.getMonth() + 2; // next month, 1-12
-  if (month > 12) {
-    month = 1;
-    year += 1;
+// The lease period the student asked for. Applications made before students
+// chose dates fall back to the 1st of next month for 12 months.
+const getLeaseDates = (application) => {
+  let leaseStart = application.move_in_date;
+  if (!leaseStart) {
+    const [year, month] = addMonths(todayIso(), 1).split("-");
+    leaseStart = `${year}-${month}-01`;
   }
 
-  const endYear = month >= 11 ? year + 1 : year;
-
   return {
-    leaseStart: toIsoDate(year, month, 1),
-    leaseEnd: toIsoDate(endYear, 11, 30),
+    leaseStart,
+    leaseEnd: getLeaseEnd(leaseStart, application.lease_months || 12),
   };
 };
 
@@ -157,23 +144,31 @@ async function decide(applicationId) {
     );
     const room = roomType.rows[0];
 
-    const currentHome = await client.query(
-      `SELECT accommodations.name
+    const { leaseStart, leaseEnd } = getLeaseDates(application);
+
+    // Another approved lease of this student that overlaps these dates
+    const overlapping = await client.query(
+      `SELECT accommodations.name, applications.lease_start, applications.lease_end
        FROM applications
        JOIN accommodations ON accommodations.id = applications.accommodation_id
        WHERE applications.student_id = $1
          AND applications.id <> $2
          AND applications.status = 'Approved'
-         AND (applications.lease_end IS NULL OR applications.lease_end >= CURRENT_DATE)
+         AND COALESCE(applications.lease_start, '-infinity'::date) <= $4::date
+         AND COALESCE(applications.lease_end, 'infinity'::date) >= $3::date
        LIMIT 1`,
-      [application.student_id, application.id]
+      [application.student_id, application.id, leaseStart, leaseEnd]
     );
 
     const label = roomLabel(application.room_type);
     let reason = null;
 
-    if (currentHome.rows.length > 0) {
-      reason = `You already have an approved home at ${currentHome.rows[0].name}.`;
+    if (overlapping.rows.length > 0) {
+      const other = overlapping.rows[0];
+      reason =
+        other.lease_start && other.lease_end
+          ? `You already have an approved home at ${other.name} from ${formatDate(other.lease_start)} to ${formatDate(other.lease_end)}, which overlaps these dates.`
+          : `You already have an approved home at ${other.name}.`;
     } else if (!room || !room.is_available || room.available_rooms === 0) {
       reason = `There are no ${label}s available at ${application.accommodation_name} right now.`;
     }
@@ -192,8 +187,6 @@ async function decide(applicationId) {
         message: `Your application for a ${label} at ${application.accommodation_name} was not successful. ${reason} You can apply for another room type or home.`,
       };
     } else {
-      const { leaseStart, leaseEnd } = getLeaseDates();
-
       await client.query(
         `UPDATE applications
          SET status = 'Approved', status_updated_at = NOW(), decision_reason = NULL,

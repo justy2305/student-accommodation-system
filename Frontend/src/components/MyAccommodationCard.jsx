@@ -99,26 +99,6 @@ export default function MyAccommodationCard({ application, now, onSigned }) {
             </div>
           </dl>
 
-          {progress && (
-            <div className="lease-progress">
-              <div
-                className="lease-progress__track"
-                role="progressbar"
-                aria-label="Lease progress"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={progress.percent}
-                aria-valuetext={`${progress.label}. ${progress.detail}`}
-              >
-                <span
-                  className={`lease-progress__bar lease-progress__bar--${progress.phase}`}
-                  style={{ width: `${progress.percent}%` }}
-                />
-              </div>
-              <p className="lease-progress__detail">{progress.detail}</p>
-            </div>
-          )}
-
           <div className={`agreement agreement--${isSigned ? "signed" : "unsigned"}`}>
             <div className="agreement__status">
               {isSigned ? <CheckCircleIcon size={20} /> : <FileTextIcon size={20} />}

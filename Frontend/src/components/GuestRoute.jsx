@@ -7,7 +7,7 @@ import PageLoader from "./PageLoader";
 // the form just succeeded) this sends them on: back to the page they were
 // trying to open, or to their dashboard. All post-login redirects happen here.
 export default function GuestRoute({ children }) {
-  const { user, authEvent, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -16,11 +16,7 @@ export default function GuestRoute({ children }) {
 
   if (user) {
     return (
-      <Navigate
-        to={getPostLoginPath(location.state?.from)}
-        replace
-        state={authEvent === "registered" ? { notice: "registered" } : undefined}
-      />
+      <Navigate to={getPostLoginPath(location.state?.from)} replace />
     );
   }
 

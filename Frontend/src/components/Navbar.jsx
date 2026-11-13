@@ -13,7 +13,7 @@ const NAV_LINKS = [
 const navLinkClass = ({ isActive }) => `navbar__link${isActive ? " is-active" : ""}`;
 
 // Full navbar from the Figma design (logged-in pages)
-export default function Navbar({ unreadCount = 0 }) {
+export default function Navbar() {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -53,15 +53,6 @@ export default function Navbar({ unreadCount = 0 }) {
         </nav>
 
         <div className="navbar__actions">
-          <Link
-            to="/notifications"
-            className="icon-button"
-            aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
-          >
-            <BellIcon size={20} />
-            {unreadCount > 0 && <span className="navbar__dot" aria-hidden="true" />}
-          </Link>
-
           <div className="account-menu" ref={menuRef}>
             <button
               type="button"
@@ -100,6 +91,10 @@ export default function Navbar({ unreadCount = 0 }) {
                   <div className="account-menu__divider" />
                 </nav>
 
+                <Link to="/notifications" className="account-menu__item" onClick={closeMenu}>
+                  <BellIcon size={18} />
+                  Notifications
+                </Link>
                 <Link to="/profile" className="account-menu__item" onClick={closeMenu}>
                   <UserIcon size={18} />
                   My profile

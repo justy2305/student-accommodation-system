@@ -89,3 +89,39 @@ export function getLeaseProgress(leaseStart, leaseEnd, now) {
     percent: Math.min(100, Math.round((daysBetween(start, today) / totalDays) * 100)),
   };
 }
+
+// ---- Choosing a lease when applying (the backend checks the same rules) ----
+
+// Lease lengths a student can choose, and how far ahead they can move in
+export const LEASE_MONTHS = [3, 6, 10, 12];
+export const MAX_MONTHS_AHEAD = 6;
+
+const toIsoDate = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+// Same month arithmetic as the backend: stays inside a shorter month
+function addMonthsKeepDay(date, months) {
+  const target = new Date(date.getFullYear(), date.getMonth() + months, 1);
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  return new Date(target.getFullYear(), target.getMonth(), Math.min(date.getDate(), lastDay));
+}
+
+// Earliest and latest move-in dates ("YYYY-MM-DD") for the date field
+export function getMoveInRange(today = new Date()) {
+  const start = startOfDay(today);
+  return { min: toIsoDate(start), max: toIsoDate(addMonthsKeepDay(start, MAX_MONTHS_AHEAD)) };
+}
+
+// Suggested move-in: the 1st of next month
+export function getDefaultMoveIn(today = new Date()) {
+  return toIsoDate(new Date(today.getFullYear(), today.getMonth() + 1, 1));
+}
+
+// Last day of the lease: move-in + months - 1 day. "2026-12-01", 12 → "2027-11-30"
+export function getLeaseEndDate(moveIn, months) {
+  const start = parseDateOnly(moveIn);
+  if (!start || !months) return null;
+  const end = addMonthsKeepDay(start, months);
+  end.setDate(end.getDate() - 1);
+  return toIsoDate(end);
+}

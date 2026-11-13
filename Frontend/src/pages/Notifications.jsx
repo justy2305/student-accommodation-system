@@ -92,7 +92,7 @@ export default function Notifications() {
   };
 
   return (
-    <DashboardLayout unreadCount={unreadCount}>
+    <DashboardLayout>
       <div className="dashboard-header">
         <div>
           <h1 className="dashboard-header__title">Notifications</h1>

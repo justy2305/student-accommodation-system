@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import ApplicationCard from "../components/ApplicationCard";
 import MyAccommodationCard from "../components/MyAccommodationCard";
 import StatCard from "../components/StatCard";
 import { BellIcon, CheckCircleIcon, FileTextIcon } from "../components/icons";
 import Alert from "../components/ui/Alert";
 import Button from "../components/ui/Button";
-import useAuth from "../context/useAuth";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { getErrorMessage } from "../services/api";
 import { getMyApplications } from "../services/applicationService";
@@ -32,8 +31,6 @@ const EMPTY_MESSAGES = {
 };
 
 export default function StudentDashboard() {
-  const { user } = useAuth();
-  const location = useLocation();
 
   const [data, setData] = useState({ applications: [], notifications: [], loadedAt: null });
   const [loadState, setLoadState] = useState("loading"); // loading | ready | error
@@ -136,26 +133,10 @@ export default function StudentDashboard() {
   const isReady = loadState === "ready";
 
   return (
-    <DashboardLayout unreadCount={unreadCount}>
-      {location.state?.notice === "applied" && (
-        <Alert variant="success" title="Application sent">
-          You'll get a decision in about 2 minutes. This page updates by itself, and we'll notify you.
-        </Alert>
-      )}
-
-      {location.state?.notice === "registered" && (
-        <Alert variant="success" title="Your account is ready">
-          Welcome to FindMyhome. You're logged in.
-        </Alert>
-      )}
-
+    <DashboardLayout>
       <div className="dashboard-header">
         <div>
           <h1 className="dashboard-header__title">Your next chapter, in progress.</h1>
-          <p className="dashboard-header__subtitle">
-            Hi {user?.first_name ?? "there"}, keep an eye on your applications and we'll keep you in
-            the loop.
-          </p>
         </div>
       </div>
 

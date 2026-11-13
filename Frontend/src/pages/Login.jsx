@@ -15,7 +15,6 @@ const NOTICES = {
   loginRequired: { variant: "info", text: "Please log in to continue." },
   sessionExpired: { variant: "info", text: "Your session has expired. Please log in again." },
   loggedOut: { variant: "success", text: "You've been logged out. See you soon." },
-  loginToApply: { variant: "info", text: "Log in to apply for this home. We'll bring you straight back." },
 };
 
 export default function Login() {
