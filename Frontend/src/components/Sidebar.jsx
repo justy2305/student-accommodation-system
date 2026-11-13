@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import useAuth from "../context/useAuth";
-import { getInitials, getRoleLabel, getShortName } from "../utils/user";
+import { getInitials, getShortName, getStudentLabel } from "../utils/user";
 import { BellIcon, FileTextIcon } from "./icons";
 
 const ITEMS = [
@@ -21,7 +21,7 @@ export default function Sidebar() {
         </span>
         <div>
           <p className="sidebar__name">{getShortName(user)}</p>
-          <p className="sidebar__role">{getRoleLabel(user)}</p>
+          <p className="sidebar__role">{getStudentLabel(user)}</p>
         </div>
       </div>
 

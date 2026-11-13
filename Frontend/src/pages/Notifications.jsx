@@ -11,11 +11,12 @@ import {
 } from "../services/notificationService";
 import { formatRelativeTime } from "../utils/format";
 
-// The backend message ends with the new status, e.g. "...updated to: Approved."
+// Picks the icon from the message the automatic review sent
 function iconFor(message = "") {
-  if (message.includes("Approved")) return { Icon: CheckCircleIcon, tone: "success" };
-  if (message.includes("Rejected")) return { Icon: XCircleIcon, tone: "danger" };
-  if (message.includes("Under Review")) return { Icon: ClockIcon, tone: "warning" };
+  const text = message.toLowerCase();
+  if (text.includes("approved")) return { Icon: CheckCircleIcon, tone: "success" };
+  if (text.includes("not successful") || text.includes("rejected")) return { Icon: XCircleIcon, tone: "danger" };
+  if (text.includes("under review")) return { Icon: ClockIcon, tone: "warning" };
   return { Icon: BellIcon, tone: "neutral" };
 }
 

@@ -6,63 +6,35 @@ const authMiddleware = require("../middleware/authMiddleware");
 const {
   createApplication,
   getMyApplications,
-  getAllApplications,
   getApplicationById,
+  deleteApplication,
 } = require("../controllers/applicationController");
 
 const {
-  updateApplicationStatus,
   getApplicationStatusHistory,
   signLease,
 } = require("../controllers/applicationStatusController");
 
-// Submit an application
-router.post("/", authMiddleware, createApplication);
+// Every route here is for the logged-in student and their own applications.
+// Statuses change through the automatic review, not through the API.
+router.use(authMiddleware);
+
+// Submit an application { accommodation_id, room_type }
+router.post("/", createApplication);
 
 // View the logged-in student's applications
-router.get("/my", authMiddleware, getMyApplications);
-
-// Update an application's status (admin only)
-router.put(
-  "/:id/status",
-  authMiddleware,
-  (req, res, next) => {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({
-        message: "Access denied. Admins only.",
-      });
-    }
-    next();
-  },
-  updateApplicationStatus
-);
+router.get("/my", getMyApplications);
 
 // Student signs the lease agreement for their approved application
-router.patch("/:id/sign-lease", authMiddleware, signLease);
+router.patch("/:id/sign-lease", signLease);
 
 // View application status history
-router.get(
-  "/:id/history",
-  authMiddleware,
-  getApplicationStatusHistory
-);
-
-// View all applications (admin only)
-router.get(
-  "/",
-  authMiddleware,
-  (req, res, next) => {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({
-        message: "Access denied. Admins only.",
-      });
-    }
-    next();
-  },
-  getAllApplications
-);
+router.get("/:id/history", getApplicationStatusHistory);
 
 // View one application
-router.get("/:id", authMiddleware, getApplicationById);
+router.get("/:id", getApplicationById);
+
+// Withdraw an application (only while Pending or Under Review)
+router.delete("/:id", deleteApplication);
 
 module.exports = router;

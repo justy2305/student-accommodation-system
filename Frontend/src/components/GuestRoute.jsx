@@ -17,7 +17,7 @@ export default function GuestRoute({ children }) {
   if (user) {
     return (
       <Navigate
-        to={getPostLoginPath(user, location.state?.from)}
+        to={getPostLoginPath(location.state?.from)}
         replace
         state={authEvent === "registered" ? { notice: "registered" } : undefined}
       />

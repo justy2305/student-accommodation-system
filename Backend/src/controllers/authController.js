@@ -35,7 +35,6 @@ const toPublicUser = (user) => ({
   last_name: user.last_name,
   email: user.email,
   phone: user.phone,
-  role: user.role,
   institution: user.institution ?? null
 });
 
@@ -43,8 +42,7 @@ const startSession = (res, user) => {
   const token = jwt.sign(
     {
       id: user.id,
-      email: user.email,
-      role: user.role
+      email: user.email
     },
     process.env.JWT_SECRET,
     {
@@ -99,7 +97,7 @@ const register = async (req, res) => {
     // Hash password using bcrypt
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user (role is never taken from the request body)
+    // Create the student account
     const user = await userModel.createUser(
       firstName,
       lastName,
@@ -231,5 +229,6 @@ module.exports = {
   register,
   login,
   getCurrentUser,
-  logout
+  logout,
+  cookieOptions
 };

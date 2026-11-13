@@ -10,13 +10,12 @@ if (!process.env.JWT_SECRET) {
 const pool = require("./config/database");
 const authRoutes = require("./routes/authRoutes");
 const accommodationRoutes = require("./routes/accommodationRoutes");
-const roomRoutes = require("./routes/roomRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
 const accommodationImageRoutes = require("./routes/accommodationImageRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
-const adminRoutes = require("./routes/adminRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const userRoutes = require("./routes/userRoutes");
+const { startAutomaticReview } = require("./services/applicationReview");
 
 const app = express();
 
@@ -33,10 +32,8 @@ app.use(express.json());
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/applications", applicationRoutes);
-app.use("/api/rooms", roomRoutes);
 app.use("/api/accommodations", accommodationRoutes);
 app.use("/api/accommodation-images", accommodationImageRoutes);
-app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
 
@@ -78,4 +75,7 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+  // Moves applications from Pending to Under Review to a decision
+  startAutomaticReview();
 });

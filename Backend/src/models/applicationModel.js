@@ -1,12 +1,26 @@
-
 const pool = require("../config/database");
 
-// Submit a new application
-const createApplication = async (studentId, accommodationId) => {
+// Submit a new application for one room type
+const createApplication = async (studentId, accommodationId, roomType) => {
   const result = await pool.query(
-    `INSERT INTO applications (student_id, accommodation_id)
-     VALUES ($1, $2)
+    `INSERT INTO applications (student_id, accommodation_id, room_type)
+     VALUES ($1, $2, $3)
      RETURNING *`,
+    [studentId, accommodationId, roomType]
+  );
+
+  return result.rows[0];
+};
+
+// The student's open or approved application for a home, if any
+// (used to stop applying twice for the same home)
+const findOpenApplication = async (studentId, accommodationId) => {
+  const result = await pool.query(
+    `SELECT * FROM applications
+     WHERE student_id = $1
+       AND accommodation_id = $2
+       AND status IN ('Pending', 'Under Review', 'Approved')
+     LIMIT 1`,
     [studentId, accommodationId]
   );
 
@@ -20,7 +34,12 @@ const getApplicationsByStudent = async (studentId) => {
        applications.*,
        accommodations.name AS accommodation_name,
        accommodations.location AS accommodation_location,
-       accommodations.price AS accommodation_price,
+       COALESCE(
+         (SELECT Rtype.price FROM accommodation_room_types Rtype
+          WHERE Rtype.accommodation_id = accommodations.id
+            AND Rtype.room_type = applications.room_type),
+         accommodations.price
+       ) AS accommodation_price,
        (SELECT image_url FROM accommodation_images Aimage
         WHERE Aimage.accommodation_id = accommodations.id
         ORDER BY Aimage.id LIMIT 1) AS accommodation_image
@@ -30,26 +49,6 @@ const getApplicationsByStudent = async (studentId) => {
      WHERE applications.student_id = $1
      ORDER BY applications.created_at DESC`,
     [studentId]
-  );
-
-  return result.rows;
-};
-
-// Get all applications for administration
-const getAllApplications = async () => {
-  const result = await pool.query(
-    `SELECT
-       applications.*,
-       users.first_name,
-       users.last_name,
-       users.email,
-       accommodations.name AS accommodation_name,
-       accommodations.location AS accommodation_location
-     FROM applications
-     JOIN users ON applications.student_id = users.id
-     JOIN accommodations
-       ON applications.accommodation_id = accommodations.id
-     ORDER BY applications.created_at DESC`
   );
 
   return result.rows;
@@ -65,9 +64,21 @@ const getApplicationById = async (id) => {
   return result.rows[0];
 };
 
+// Delete an application. Its status history and notifications are deleted
+// with it (ON DELETE CASCADE).
+const deleteApplication = async (id) => {
+  const result = await pool.query(
+    "DELETE FROM applications WHERE id = $1 RETURNING *",
+    [id]
+  );
+
+  return result.rows[0];
+};
+
 module.exports = {
   createApplication,
+  findOpenApplication,
   getApplicationsByStudent,
-  getAllApplications,
   getApplicationById,
+  deleteApplication,
 };

@@ -1,15 +1,16 @@
-// Maps the backend statuses (see applicationStatusController.js) to how the
-// dashboard shows them: badge colour, label and a short explanation.
+// Maps the application statuses to how the dashboard shows them: badge
+// colour, label and a short explanation. Statuses are changed by the
+// automatic review on the server (about 1 minute per step).
 const APPLICATION_STATUS = {
   Pending: {
     badge: "neutral",
     label: "Pending",
-    description: "Submitted. Waiting for the housing team to review it.",
+    description: "Submitted. The automatic review starts in about a minute.",
   },
   "Under Review": {
     badge: "warning",
     label: "Under review",
-    description: "The housing team is reviewing your application. No action is needed right now.",
+    description: "We're checking room availability. You'll get a decision in about a minute.",
   },
   Approved: {
     badge: "success",

@@ -8,9 +8,12 @@ export async function getMyApplications() {
   return data.applications ?? [];
 }
 
-// POST /api/applications → apply for an accommodation as the logged-in student
-export async function applyForAccommodation(accommodationId) {
-  const { data } = await api.post("/applications", { accommodation_id: accommodationId });
+// POST /api/applications → apply for one room type at an accommodation
+export async function applyForAccommodation(accommodationId, roomType) {
+  const { data } = await api.post("/applications", {
+    accommodation_id: accommodationId,
+    room_type: roomType,
+  });
   return data.application;
 }
 
@@ -18,4 +21,9 @@ export async function applyForAccommodation(accommodationId) {
 export async function signLease(applicationId) {
   const { data } = await api.patch(`/applications/${applicationId}/sign-lease`);
   return data.application;
+}
+
+// DELETE /api/applications/:id → withdraw a Pending or Under Review application
+export async function withdrawApplication(applicationId) {
+  await api.delete(`/applications/${applicationId}`);
 }

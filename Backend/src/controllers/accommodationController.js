@@ -1,90 +1,6 @@
 
 const accommodationModel = require("../models/accommodationModel");
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_PATTERN = /^\+?[0-9\s-]{7,20}$/;
-
-// Optional listing details from the request body: address, rules (list of
-// strings), contact_name, contact_phone, contact_email.
-// Returns { details } or { error }.
-const readListingDetails = (body = {}) => {
-  const text = (value) =>
-    value === undefined || value === null || String(value).trim() === ""
-      ? undefined
-      : String(value).trim();
-
-  const details = {
-    address: text(body.address),
-    contactName: text(body.contact_name),
-    contactPhone: text(body.contact_phone),
-    contactEmail: text(body.contact_email)?.toLowerCase(),
-  };
-
-  if (body.rules !== undefined) {
-    if (!Array.isArray(body.rules) || body.rules.some((rule) => typeof rule !== "string")) {
-      return { error: "rules must be a list of text" };
-    }
-    details.rules = body.rules.map((rule) => rule.trim()).filter(Boolean);
-    if (details.rules.length > 30 || details.rules.some((rule) => rule.length > 200)) {
-      return { error: "Use up to 30 rules of 200 characters or fewer" };
-    }
-  }
-
-  if (details.address && details.address.length > 255) {
-    return { error: "Address must be 255 characters or fewer" };
-  }
-  if (details.contactName && details.contactName.length > 150) {
-    return { error: "Contact name must be 150 characters or fewer" };
-  }
-  if (details.contactPhone && !PHONE_PATTERN.test(details.contactPhone)) {
-    return { error: "Enter a valid contact phone number" };
-  }
-  if (details.contactEmail && !EMAIL_PATTERN.test(details.contactEmail)) {
-    return { error: "Enter a valid contact email" };
-  }
-
-  return { details };
-};
-
-// Create accommodation
-const createAccommodation = async (req, res) => {
-  try {
-    const { name, location, description, price } = req.body;
-
-    if (!name || !location || price === undefined || price === "") {
-      return res.status(400).json({
-        message: "Please provide all required fields",
-      });
-    }
-
-    const { details, error } = readListingDetails(req.body);
-    if (error) {
-      return res.status(400).json({ message: error });
-    }
-
-    const accommodation =
-      await accommodationModel.createAccommodation(
-        name,
-        location,
-        description,
-        price,
-        details
-      );
-
-    return res.status(201).json({
-      message: "Accommodation created successfully",
-      accommodation,
-    });
-  } catch (error) {
-    console.error("Create accommodation error:", error);
-
-    return res.status(500).json({
-      message: "Server error",
-    });
-  }
-};
-
-
 // Get all accommodations
 const getAllAccommodations = async (req, res) => {
   try {
@@ -253,82 +169,10 @@ const getFilterOptions = async (req, res) => {
 };
 
 
-// Update accommodation
-const updateAccommodation = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, location, description, price } = req.body;
-
-    const { details, error } = readListingDetails(req.body);
-    if (error) {
-      return res.status(400).json({ message: error });
-    }
-
-    const accommodation =
-      await accommodationModel.updateAccommodation(
-        id,
-        name,
-        location,
-        description,
-        price,
-        details
-      );
-
-    if (!accommodation) {
-      return res.status(404).json({
-        message: "Accommodation not found",
-      });
-    }
-
-    return res.status(200).json({
-      message: "Accommodation updated successfully",
-      accommodation,
-    });
-  } catch (error) {
-    console.error("Update accommodation error:", error);
-
-    return res.status(500).json({
-      message: "Server error",
-    });
-  }
-};
-
-
-// Delete accommodation
-const deleteAccommodation = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const accommodation =
-      await accommodationModel.deleteAccommodation(id);
-
-    if (!accommodation) {
-      return res.status(404).json({
-        message: "Accommodation not found",
-      });
-    }
-
-    return res.status(200).json({
-      message: "Accommodation deleted successfully",
-      accommodation,
-    });
-  } catch (error) {
-    console.error("Delete accommodation error:", error);
-
-    return res.status(500).json({
-      message: "Server error",
-    });
-  }
-};
-
-
 // Export controller functions
 module.exports = {
-  createAccommodation,
   getAllAccommodations,
   getAccommodationById,
-  updateAccommodation,
-  deleteAccommodation,
   searchAccommodations,
   getFilterOptions,
 };

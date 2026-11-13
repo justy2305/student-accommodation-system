@@ -2,7 +2,7 @@ const pool = require("../config/database");
 
 // Everything about a user except the password hash
 const PROFILE_COLUMNS = `
-  id, first_name, last_name, email, phone, role, created_at,
+  id, first_name, last_name, email, phone, created_at,
   institution, student_number, programme, year_of_study, updated_at`;
 
 const createUser = async (
@@ -55,7 +55,7 @@ const isEmailTakenByOther = async (email, userId) => {
   return result.rows.length > 0;
 };
 
-// Update the student's own details. Role and password are never changed here.
+// Update the student's own details. The password is never changed here.
 const updateProfile = async (userId, profile) => {
   const result = await pool.query(
     `UPDATE users
@@ -86,10 +86,25 @@ const updateProfile = async (userId, profile) => {
   return result.rows[0];
 };
 
+// Only used to check the password before deleting an account
+const getPasswordHash = async (userId) => {
+  const result = await pool.query("SELECT password FROM users WHERE id = $1", [userId]);
+  return result.rows[0]?.password ?? null;
+};
+
+// Delete an account. Applications and notifications go with it
+// (ON DELETE CASCADE); status history keeps the row with changed_by NULL.
+const deleteUser = async (userId) => {
+  const result = await pool.query("DELETE FROM users WHERE id = $1 RETURNING id", [userId]);
+  return result.rows[0];
+};
+
 module.exports = {
   createUser,
   findUserByEmail,
   findUserById,
   isEmailTakenByOther,
-  updateProfile
+  updateProfile,
+  getPasswordHash,
+  deleteUser
 };

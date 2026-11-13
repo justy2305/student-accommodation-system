@@ -1,130 +1,20 @@
-
 const applicationModel = require("../models/applicationModel");
 const applicationStatusModel = require("../models/applicationStatusModel");
-const notificationModel = require("../models/notificationModel");
 
-const allowedStatuses = [
-  "Pending",
-  "Under Review",
-  "Approved",
-  "Rejected",
-];
+// Status changes are made by the automatic review (src/services/applicationReview.js).
+// Here: viewing the history, and the student signing their lease.
 
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
-// true for a real calendar date written as YYYY-MM-DD
-const isValidDate = (value) => {
-  if (typeof value !== "string" || !DATE_PATTERN.test(value)) return false;
-  const date = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+const toId = (value) => {
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 ? id : null;
 };
 
-// Admin updates an application's status and notifies the student.
-// When approving, the admin can also send lease_start and lease_end (YYYY-MM-DD).
-const updateApplicationStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, note, lease_start: leaseStart, lease_end: leaseEnd } = req.body;
-    const applicationId = Number(id);
-
-    if (!Number.isInteger(applicationId) || applicationId <= 0) {
-      return res.status(400).json({
-        message: "Invalid application ID",
-      });
-    }
-
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        message:
-          "Status must be Pending, Under Review, Approved, or Rejected",
-      });
-    }
-
-    if (note !== undefined && typeof note !== "string") {
-      return res.status(400).json({
-        message: "Note must be text",
-      });
-    }
-
-    const hasLeaseDates = leaseStart !== undefined || leaseEnd !== undefined;
-
-    if (hasLeaseDates) {
-      if (status !== "Approved") {
-        return res.status(400).json({
-          message: "Lease dates can only be set when approving an application",
-        });
-      }
-
-      if (!isValidDate(leaseStart) || !isValidDate(leaseEnd)) {
-        return res.status(400).json({
-          message: "lease_start and lease_end must both be dates in the format YYYY-MM-DD",
-        });
-      }
-
-      if (leaseEnd <= leaseStart) {
-        return res.status(400).json({
-          message: "lease_end must be after lease_start",
-        });
-      }
-    }
-
-    const existingApplication =
-      await applicationModel.getApplicationById(applicationId);
-
-    if (!existingApplication) {
-      return res.status(404).json({
-        message: "Application not found",
-      });
-    }
-
-    // Update application status and record its history
-    const updatedApplication =
-      await applicationStatusModel.updateApplicationStatus(
-        applicationId,
-        status,
-        req.user.id,
-        note,
-        hasLeaseDates ? leaseStart : null,
-        hasLeaseDates ? leaseEnd : null
-      );
-
-    if (!updatedApplication) {
-      return res.status(404).json({
-        message: "Application not found",
-      });
-    }
-
-    // Create a notification for the student
-    await notificationModel.createNotification(
-      existingApplication.student_id,
-      applicationId,
-      `Your accommodation application #${applicationId} status has been updated to: ${status}.` +
-        (status === "Approved" && updatedApplication.lease_start && updatedApplication.lease_end
-          ? ` Your lease runs from ${updatedApplication.lease_start} to ${updatedApplication.lease_end}. Please sign your lease agreement in your portal.`
-          : "")
-    );
-
-    return res.status(200).json({
-      message:
-        "Application status updated and student notified successfully",
-      application: updatedApplication,
-    });
-  } catch (error) {
-    console.error("Update application status error:", error);
-
-    return res.status(500).json({
-      message: "Server error while updating application status",
-    });
-  }
-};
-
-// View status history (application owner or admin)
+// View the status history of one of the student's own applications
 const getApplicationStatusHistory = async (req, res) => {
   try {
-    const { id } = req.params;
-    const applicationId = Number(id);
+    const applicationId = toId(req.params.id);
 
-    if (!Number.isInteger(applicationId) || applicationId <= 0) {
+    if (!applicationId) {
       return res.status(400).json({
         message: "Invalid application ID",
       });
@@ -133,18 +23,9 @@ const getApplicationStatusHistory = async (req, res) => {
     const application =
       await applicationModel.getApplicationById(applicationId);
 
-    if (!application) {
+    if (!application || Number(application.student_id) !== Number(req.user.id)) {
       return res.status(404).json({
         message: "Application not found",
-      });
-    }
-
-    if (
-      req.user.role !== "admin" &&
-      Number(application.student_id) !== Number(req.user.id)
-    ) {
-      return res.status(403).json({
-        message: "You are not allowed to view this history",
       });
     }
 
@@ -170,9 +51,9 @@ const getApplicationStatusHistory = async (req, res) => {
 // Student signs the lease agreement for their approved application
 const signLease = async (req, res) => {
   try {
-    const applicationId = Number(req.params.id);
+    const applicationId = toId(req.params.id);
 
-    if (!Number.isInteger(applicationId) || applicationId <= 0) {
+    if (!applicationId) {
       return res.status(400).json({
         message: "Invalid application ID",
       });
@@ -181,16 +62,9 @@ const signLease = async (req, res) => {
     const application =
       await applicationModel.getApplicationById(applicationId);
 
-    if (!application) {
+    if (!application || Number(application.student_id) !== Number(req.user.id)) {
       return res.status(404).json({
         message: "Application not found",
-      });
-    }
-
-    // Only the student who applied can sign (not even an admin)
-    if (Number(application.student_id) !== Number(req.user.id)) {
-      return res.status(403).json({
-        message: "You can only sign your own lease agreement",
       });
     }
 
@@ -202,7 +76,7 @@ const signLease = async (req, res) => {
 
     if (!application.lease_start || !application.lease_end) {
       return res.status(400).json({
-        message: "The housing team hasn't set your lease dates yet",
+        message: "This application has no lease dates yet",
       });
     }
 
@@ -237,7 +111,6 @@ const signLease = async (req, res) => {
 };
 
 module.exports = {
-  updateApplicationStatus,
   getApplicationStatusHistory,
   signLease,
 };

@@ -77,6 +77,26 @@ export default function StudentDashboard() {
     setReloadKey((key) => key + 1);
   };
 
+  // While an application is still being reviewed, check every 15 seconds so
+  // the new status appears without a refresh
+  const hasOpenReview = data.applications.some(
+    (app) => app.status === "Pending" || app.status === "Under Review"
+  );
+
+  useEffect(() => {
+    if (!hasOpenReview) return undefined;
+
+    const timer = setInterval(() => {
+      Promise.all([getMyApplications(), getMyNotifications()])
+        .then(([applications, notifications]) => {
+          setData({ applications, notifications, loadedAt: new Date() });
+        })
+        .catch(() => {});
+    }, 15000);
+
+    return () => clearInterval(timer);
+  }, [hasOpenReview]);
+
   const { applications, notifications, loadedAt } = data;
   const activeApplications = applications.filter((app) => isActiveApplication(app.status));
   const pastApplications = applications.filter((app) => !isActiveApplication(app.status));
@@ -101,6 +121,16 @@ export default function StudentDashboard() {
     }));
   };
 
+  // After withdrawing, drop the application and its notifications (the
+  // backend deletes those with it)
+  const handleWithdrawn = (applicationId) => {
+    setData((previous) => ({
+      ...previous,
+      applications: previous.applications.filter((app) => app.id !== applicationId),
+      notifications: previous.notifications.filter((item) => item.application_id !== applicationId),
+    }));
+  };
+
   const tabCounts = { active: activeApplications.length, past: pastApplications.length };
   const shownApplications = activeTab === "active" ? activeApplications : pastApplications;
   const isReady = loadState === "ready";
@@ -109,7 +139,7 @@ export default function StudentDashboard() {
     <DashboardLayout unreadCount={unreadCount}>
       {location.state?.notice === "applied" && (
         <Alert variant="success" title="Application sent">
-          The housing team will review it. We'll let you know here when anything changes.
+          You'll get a decision in about 2 minutes. This page updates by itself, and we'll notify you.
         </Alert>
       )}
 
@@ -204,7 +234,11 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 shownApplications.map((application) => (
-                  <ApplicationCard key={application.id} application={application} />
+                  <ApplicationCard
+                    key={application.id}
+                    application={application}
+                    onWithdrawn={handleWithdrawn}
+                  />
                 ))
               )}
             </div>

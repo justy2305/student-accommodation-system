@@ -6,7 +6,7 @@ const ICONS = {
   info: InfoIcon,
 };
 
-// Pink alert box from the Figma design ("Your application is with the housing team.")
+// Pink alert box from the Figma design
 export default function Alert({ variant = "error", title, children }) {
   const Icon = ICONS[variant] ?? InfoIcon;
 

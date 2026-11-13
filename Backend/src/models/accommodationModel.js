@@ -39,29 +39,6 @@ const SELECT_COLUMNS = `
 const SELECT_WITH_COVER = `${SELECT_COLUMNS}
   FROM accommodations`;
 
-// Create an accommodation. details: { address, rules, contactName, contactPhone, contactEmail }
-const createAccommodation = async (name, location, description, price, details = {}) => {
-  const result = await pool.query(
-    `INSERT INTO accommodations
-       (name, location, description, price, address, rules, contact_name, contact_phone, contact_email)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-     RETURNING *`,
-    [
-      name,
-      location,
-      description,
-      price,
-      details.address ?? null,
-      details.rules ?? [],
-      details.contactName ?? null,
-      details.contactPhone ?? null,
-      details.contactEmail ?? null,
-    ]
-  );
-
-  return result.rows[0];
-};
-
 // Get all accommodations
 const getAllAccommodations = async () => {
   const result = await pool.query(
@@ -75,55 +52,6 @@ const getAllAccommodations = async () => {
 const getAccommodationById = async (id) => {
   const result = await pool.query(
     `${SELECT_WITH_COVER} WHERE accommodations.id = $1`,
-    [id]
-  );
-
-  return result.rows[0];
-};
-
-// Update an accommodation. Listing details that are not sent keep their value.
-const updateAccommodation = async (
-  id,
-  name,
-  location,
-  description,
-  price,
-  details = {}
-) => {
-  const result = await pool.query(
-    `UPDATE accommodations
-     SET name = $1,
-         location = $2,
-         description = $3,
-         price = $4,
-         address = COALESCE($6, address),
-         rules = COALESCE($7, rules),
-         contact_name = COALESCE($8, contact_name),
-         contact_phone = COALESCE($9, contact_phone),
-         contact_email = COALESCE($10, contact_email)
-     WHERE id = $5
-     RETURNING *`,
-    [
-      name,
-      location,
-      description,
-      price,
-      id,
-      details.address ?? null,
-      details.rules ?? null,
-      details.contactName ?? null,
-      details.contactPhone ?? null,
-      details.contactEmail ?? null,
-    ]
-  );
-
-  return result.rows[0];
-};
-
-// Delete an accommodation
-const deleteAccommodation = async (id) => {
-  const result = await pool.query(
-    "DELETE FROM accommodations WHERE id = $1 RETURNING *",
     [id]
   );
 
@@ -266,11 +194,8 @@ const getFilterOptions = async () => {
 
 module.exports = {
   ROOM_TYPES,
-  createAccommodation,
   getAllAccommodations,
   getAccommodationById,
-  updateAccommodation,
-  deleteAccommodation,
   searchAccommodations,
   getFilterOptions,
 };

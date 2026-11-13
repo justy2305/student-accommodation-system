@@ -1,9 +1,13 @@
 const notificationModel = require("../models/notificationModel");
+const { processQuietly } = require("../services/applicationReview");
 
 // Get the logged-in user's notifications
 const getMyNotifications = async (req, res) => {
     try {
         const userId = req.user.id;
+
+        // Bring any due automatic decisions up to date first
+        await processQuietly();
 
         const notifications =
             await notificationModel.getNotificationsByUser(userId);

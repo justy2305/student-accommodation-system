@@ -1,13 +1,39 @@
+import { useState } from "react";
+import { getErrorMessage } from "../services/api";
+import { withdrawApplication } from "../services/applicationService";
 import { getStatusInfo } from "../utils/status";
 import { formatApplicationReference, formatDate, formatPrice } from "../utils/format";
 import { CalendarIcon, ImageIcon, MapPinIcon } from "./icons";
 import Badge from "./ui/Badge";
+import Button from "./ui/Button";
 import { getImageUrl } from "../utils/image";
+import { getRoomTypeLabel } from "../utils/accommodation";
 
-// One application on the dashboard. The progress stepper and history are added in Phase 19.
-export default function ApplicationCard({ application }) {
+// Statuses a student can still withdraw from (the backend checks this too)
+const WITHDRAWABLE = ["Pending", "Under Review"];
+
+// One application on the dashboard. Pending and under-review applications can
+// be withdrawn; onWithdrawn(id) removes it from the list.
+export default function ApplicationCard({ application, onWithdrawn }) {
   const status = getStatusInfo(application.status);
   const price = formatPrice(application.accommodation_price);
+  const canWithdraw = Boolean(onWithdrawn) && WITHDRAWABLE.includes(application.status);
+
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleWithdraw = async () => {
+    setIsWithdrawing(true);
+    setError("");
+    try {
+      await withdrawApplication(application.id);
+      onWithdrawn(application.id);
+    } catch (withdrawError) {
+      setError(getErrorMessage(withdrawError, "We couldn't withdraw this application. Please try again."));
+      setIsWithdrawing(false);
+    }
+  };
 
   return (
     <article className="application-card">
@@ -40,6 +66,7 @@ export default function ApplicationCard({ application }) {
           )}
           {price && (
             <p className="application-card__price">
+              {application.room_type && <>{getRoomTypeLabel(application.room_type)} · </>}
               <strong>{price}</strong> / month
             </p>
           )}
@@ -53,7 +80,52 @@ export default function ApplicationCard({ application }) {
       {status.description && (
         <p className={`application-card__status application-card__status--${status.badge}`}>
           {status.description}
+          {application.status === "Rejected" && application.decision_reason && (
+            <> {application.decision_reason}</>
+          )}
         </p>
+      )}
+
+      {canWithdraw && (
+        <footer className="application-card__footer">
+          {isConfirming ? (
+            <div className="withdraw-confirm" role="group" aria-label="Confirm withdrawal">
+              <p className="withdraw-confirm__text">
+                Withdraw your application for {application.accommodation_name}? This can't be undone.
+              </p>
+              <div className="withdraw-confirm__actions">
+                <Button
+                  variant="secondary"
+                  className="btn--sm"
+                  onClick={() => {
+                    setIsConfirming(false);
+                    setError("");
+                  }}
+                  disabled={isWithdrawing}
+                >
+                  Keep it
+                </Button>
+                <Button
+                  className="btn--sm btn--danger"
+                  onClick={handleWithdraw}
+                  isLoading={isWithdrawing}
+                  loadingText="Withdrawing…"
+                >
+                  Yes, withdraw
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" className="application-card__withdraw" onClick={() => setIsConfirming(true)}>
+              Withdraw application
+            </button>
+          )}
+          {error && (
+            <p className="application-card__error" role="alert">
+              {error}
+            </p>
+          )}
+        </footer>
       )}
     </article>
   );

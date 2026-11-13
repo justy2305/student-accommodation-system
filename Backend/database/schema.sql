@@ -6,7 +6,7 @@
 -- Safe to run more than once: existing tables and their data are kept.
 -- ==========================================================================
 
--- Users: students and admins
+-- Users: students
 CREATE TABLE IF NOT EXISTS users (
   id          SERIAL PRIMARY KEY,
   first_name  VARCHAR(100) NOT NULL,
@@ -14,10 +14,12 @@ CREATE TABLE IF NOT EXISTS users (
   email       VARCHAR(255) NOT NULL,
   password    VARCHAR(255) NOT NULL,             -- bcrypt hash, never plain text
   phone       VARCHAR(30),
-  role        VARCHAR(20)  NOT NULL DEFAULT 'student'
-              CHECK (role IN ('student', 'admin')),
   created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
+
+-- Every account is a student account, so the old role column is removed
+-- from databases that still have it
+ALTER TABLE users DROP COLUMN IF EXISTS role;
 
 -- One account per email, ignoring capital letters
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_unique ON users (LOWER(email));
@@ -92,16 +94,9 @@ CREATE TABLE IF NOT EXISTS accommodation_images (
 CREATE INDEX IF NOT EXISTS accommodation_images_accommodation_idx
   ON accommodation_images (accommodation_id);
 
--- Rooms inside an accommodation
-CREATE TABLE IF NOT EXISTS rooms (
-  id                SERIAL PRIMARY KEY,
-  accommodation_id  INTEGER NOT NULL REFERENCES accommodations (id) ON DELETE CASCADE,
-  room_number       VARCHAR(20)    NOT NULL,
-  price             NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
-  status            VARCHAR(20)    NOT NULL DEFAULT 'Available',  -- Available / Reserved / Occupied
-  created_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-  UNIQUE (accommodation_id, room_number)
-);
+-- The old rooms table is no longer used: availability comes from
+-- accommodation_room_types
+DROP TABLE IF EXISTS rooms;
 
 -- Applications from students
 CREATE TABLE IF NOT EXISTS applications (
@@ -111,7 +106,10 @@ CREATE TABLE IF NOT EXISTS applications (
   status            VARCHAR(20) NOT NULL DEFAULT 'Pending'
                     CHECK (status IN ('Pending', 'Under Review', 'Approved', 'Rejected')),
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  lease_start       DATE,          -- set by the admin when approving
+  room_type         VARCHAR(20),   -- Single / Shared / Triple, chosen when applying
+  status_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),  -- when the status last changed
+  decision_reason   TEXT,          -- why it was rejected (automatic review)
+  lease_start       DATE,          -- set automatically when approved
   lease_end         DATE,
   lease_signed_at   TIMESTAMPTZ    -- when the student signed; NULL = not signed yet
 );
@@ -120,6 +118,11 @@ CREATE TABLE IF NOT EXISTS applications (
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS lease_start DATE;
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS lease_end DATE;
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS lease_signed_at TIMESTAMPTZ;
+
+-- Automatic review columns for databases created before they existed
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS room_type VARCHAR(20);
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS status_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS decision_reason TEXT;
 
 DO $$
 BEGIN
@@ -131,7 +134,12 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS applications_student_idx ON applications (student_id);
 
--- Every status change of an application (who changed it, when, and why)
+-- The automatic review looks up applications by status
+CREATE INDEX IF NOT EXISTS applications_status_idx ON applications (status, status_updated_at);
+
+-- Every status change of an application, when, and why.
+-- changed_by is the student (e.g. signing the lease), or NULL for the
+-- automatic review
 CREATE TABLE IF NOT EXISTS application_status_history (
   id              SERIAL PRIMARY KEY,
   application_id  INTEGER NOT NULL REFERENCES applications (id) ON DELETE CASCADE,

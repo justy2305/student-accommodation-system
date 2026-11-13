@@ -1,4 +1,7 @@
+const bcrypt = require("bcryptjs");
 const userModel = require("../models/userModels");
+const { TOKEN_COOKIE_NAME } = require("../middleware/authMiddleware");
+const { cookieOptions } = require("./authController");
 
 // "My profile": the logged-in user reads and updates their own details.
 // Every route here works on req.user.id from the verified token, never on an
@@ -21,7 +24,6 @@ const toProfile = (user) => ({
   last_name: user.last_name,
   email: user.email,
   phone: user.phone,
-  role: user.role,
   institution: user.institution,
   student_number: user.student_number,
   programme: user.programme,
@@ -143,7 +145,48 @@ const updateMyProfile = async (req, res) => {
 };
 
 
+// DELETE /api/users/me  { password }
+// Deletes the student's account. Their applications, status history and
+// notifications are deleted with it. Asks for the password so a stolen
+// session alone cannot delete the account.
+const deleteMyAccount = async (req, res) => {
+  try {
+    const password = req.body?.password;
+
+    if (!password || typeof password !== "string") {
+      return res.status(400).json({
+        message: "Enter your password to delete your account",
+        errors: { password: "Enter your password" },
+      });
+    }
+
+    const passwordHash = await userModel.getPasswordHash(req.user.id);
+
+    if (!passwordHash) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+
+    // 400 (not 401) so the frontend does not treat a typo as an expired session
+    if (!(await bcrypt.compare(password, passwordHash))) {
+      return res.status(400).json({
+        message: "Your password is incorrect",
+        errors: { password: "Your password is incorrect" },
+      });
+    }
+
+    await userModel.deleteUser(req.user.id);
+    res.clearCookie(TOKEN_COOKIE_NAME, cookieOptions);
+
+    return res.status(200).json({ message: "Account deleted" });
+  } catch (error) {
+    console.error("Delete account error:", error);
+    return res.status(500).json({ message: "Server error while deleting your account" });
+  }
+};
+
+
 module.exports = {
   getMyProfile,
   updateMyProfile,
+  deleteMyAccount,
 };

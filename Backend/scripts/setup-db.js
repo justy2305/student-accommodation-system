@@ -16,7 +16,6 @@ const APP_TABLES = [
   "accommodation_images",
   "accommodation_room_types",
   "accommodation_distances",
-  "rooms",
   "applications",
   "application_status_history",
   "notifications",

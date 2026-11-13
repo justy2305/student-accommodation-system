@@ -37,8 +37,7 @@ export function getYearLabel(yearOfStudy) {
   return YEARS_OF_STUDY.find((year) => year.value === String(yearOfStudy))?.label ?? null;
 }
 
-// Line under the name in the sidebar: "Administrator", "NUST student" or "Student"
-export function getRoleLabel(user) {
-  if (user?.role === "admin") return "Administrator";
+// Line under the name in the sidebar: "NUST student", or "Student"
+export function getStudentLabel(user) {
   return user?.institution ? `${user.institution} student` : "Student";
 }

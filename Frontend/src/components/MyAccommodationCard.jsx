@@ -72,7 +72,7 @@ export default function MyAccommodationCard({ application, now, onSigned }) {
       {!hasLeaseDates && (
         <p className="home-card__pending">
           <ClockIcon size={18} />
-          Your lease dates will appear here once the housing team adds them.
+          Your lease dates will appear here once they are set.
         </p>
       )}
 

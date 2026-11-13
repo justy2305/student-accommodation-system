@@ -434,7 +434,7 @@ function ProfileSummary({ profile }) {
           )}
           <li>
             <UserIcon size={16} />
-            {profile.role === "admin" ? "Administrator" : "Student"} since {formatDate(profile.created_at)}
+            Student since {formatDate(profile.created_at)}
           </li>
         </ul>
       </div>

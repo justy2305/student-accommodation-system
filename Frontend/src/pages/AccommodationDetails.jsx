@@ -100,7 +100,7 @@ export default function AccommodationDetails() {
               About the accommodation
             </h2>
             <p className="details-about__text">
-              {accommodation.description || "The housing team hasn't added a description yet."}
+              {accommodation.description || "No description yet."}
             </p>
 
             {accommodation.room_types?.length > 0 && (
@@ -282,26 +282,37 @@ function Gallery({ title, images, onOpen }) {
   );
 }
 
-// Sticky price card: apply as a student, or log in first
+// Applications that stop the student from applying again for the same home
+const OPEN_STATUSES = ["Pending", "Under Review", "Approved"];
+
+// Sticky price card: choose a room type and apply, or log in first
 function ApplyCard({ accommodation }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isStudent = user && user.role !== "admin";
 
+  const roomTypes = accommodation.room_types ?? [];
+  const isOpen = (room) => getRoomAvailability(room).isFull === false;
+  const firstOpen = roomTypes.find(isOpen);
+
+  const [roomType, setRoomType] = useState(firstOpen?.room_type ?? "");
   const [existing, setExisting] = useState({ key: null, application: null });
   const [isApplying, setIsApplying] = useState(false);
   const [applyError, setApplyError] = useState("");
 
-  const checkKey = isStudent ? `${user.id}:${accommodation.id}` : null;
+  const checkKey = user ? `${user.id}:${accommodation.id}` : null;
 
-  // Has this student already applied here?
+  // Does this student already have an open or approved application here?
   useEffect(() => {
     if (!checkKey) return undefined;
     let isCurrent = true;
     getMyApplications()
       .then((applications) => {
         if (!isCurrent) return;
-        const match = applications.find((app) => Number(app.accommodation_id) === Number(accommodation.id));
+        const match = applications.find(
+          (app) =>
+            Number(app.accommodation_id) === Number(accommodation.id) &&
+            OPEN_STATUSES.includes(app.status)
+        );
         setExisting({ key: checkKey, application: match ?? null });
       })
       .catch(() => {
@@ -316,7 +327,7 @@ function ApplyCard({ accommodation }) {
     setApplyError("");
     setIsApplying(true);
     try {
-      await applyForAccommodation(accommodation.id);
+      await applyForAccommodation(accommodation.id, roomType);
       navigate("/applications", { state: { notice: "applied" } });
     } catch (error) {
       setApplyError(getErrorMessage(error, "We couldn't send your application. Please try again."));
@@ -324,15 +335,16 @@ function ApplyCard({ accommodation }) {
     }
   };
 
-  const price = formatPrice(accommodation.price);
-  const isChecking = isStudent && existing.key !== checkKey;
+  const selected = roomTypes.find((room) => room.room_type === roomType);
+  const price = formatPrice(selected?.price ?? accommodation.price);
+  const isChecking = Boolean(user) && existing.key !== checkKey;
   const status = existing.application ? getStatusInfo(existing.application.status) : null;
 
   return (
     <aside className="apply-card" aria-label="Price and application">
       {price && (
         <p className="apply-card__price">
-          <span className="apply-card__from">From</span> <strong>{price}</strong> / month
+          {!selected && <span className="apply-card__from">From</span>} <strong>{price}</strong> / month
         </p>
       )}
       <h2 className="apply-card__title">Make this your next home</h2>
@@ -353,13 +365,9 @@ function ApplyCard({ accommodation }) {
         </>
       )}
 
-      {user && !isStudent && (
-        <p className="apply-card__text">You're logged in as an admin, so you can't apply.</p>
-      )}
+      {user && isChecking && <p className="apply-card__text">Checking your applications…</p>}
 
-      {isStudent && isChecking && <p className="apply-card__text">Checking your applications…</p>}
-
-      {isStudent && !isChecking && existing.application && (
+      {user && !isChecking && existing.application && (
         <>
           <p className="apply-card__text">
             You've already applied here. Status: <strong>{status.label}</strong>.
@@ -370,14 +378,61 @@ function ApplyCard({ accommodation }) {
         </>
       )}
 
-      {isStudent && !isChecking && !existing.application && (
+      {user && !isChecking && !existing.application && roomTypes.length === 0 && (
+        <p className="apply-card__text">This home isn't taking applications right now.</p>
+      )}
+
+      {user && !isChecking && !existing.application && roomTypes.length > 0 && (
         <>
-          <p className="apply-card__text">
-            Send your application to the housing team. You can track it on your dashboard.
-          </p>
+          <fieldset className="room-choice">
+            <legend className="room-choice__legend">Choose a room</legend>
+            {roomTypes.map((room) => {
+              const availability = getRoomAvailability(room);
+              return (
+                <label
+                  key={room.room_type}
+                  className={`room-choice__option${availability.isFull ? " is-disabled" : ""}${roomType === room.room_type ? " is-selected" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name="room_type"
+                    value={room.room_type}
+                    checked={roomType === room.room_type}
+                    disabled={availability.isFull}
+                    onChange={() => {
+                      setRoomType(room.room_type);
+                      setApplyError("");
+                    }}
+                  />
+                  <span className="room-choice__name">{getRoomTypeLabel(room.room_type)}</span>
+                  <span className="room-choice__price">{formatPrice(room.price)}</span>
+                  <span
+                    className={`room-choice__status${availability.isFull ? " room-choice__status--full" : ""}`}
+                  >
+                    {availability.label}
+                  </span>
+                </label>
+              );
+            })}
+          </fieldset>
+
+          {firstOpen ? (
+            <p className="apply-card__text">
+              You'll get an automatic decision in about 2 minutes, and you can track it on your
+              dashboard.
+            </p>
+          ) : (
+            <p className="apply-card__text">All rooms here are full right now.</p>
+          )}
           {applyError && <Alert variant="error">{applyError}</Alert>}
-          <Button fullWidth isLoading={isApplying} loadingText="Sending…" onClick={handleApply}>
-            Apply for this home
+          <Button
+            fullWidth
+            isLoading={isApplying}
+            loadingText="Sending…"
+            onClick={handleApply}
+            disabled={!roomType}
+          >
+            Apply for this room
           </Button>
         </>
       )}
