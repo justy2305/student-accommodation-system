@@ -364,7 +364,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\",\n  \"move_in_date\": \"{{moveInDate}}\",\n  \"lease_months\": 6\n}",
+              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\",\n  \"move_in_date\": \"{{moveInDate}}\",\n  \"gender\": \"Female\",\n  \"lease_months\": 6\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -382,7 +382,7 @@
                   "const a = pm.response.json().application;",
                   "pm.test(\"Starts as Pending\", () => pm.expect(a.status).to.eql(\"Pending\"));",
                   "pm.test(\"Saved the room type\", () => pm.expect(a.room_type).to.eql(pm.collectionVariables.get(\"roomType\")));",
-                  "pm.test(\"Saved the move-in date and lease length\", () => { pm.expect(a.move_in_date).to.eql(pm.collectionVariables.get(\"moveInDate\")); pm.expect(a.lease_months).to.eql(6); });",
+                  "pm.test(\"Saved the move-in date and lease length\", () => { pm.expect(a.move_in_date).to.eql(pm.collectionVariables.get(\"moveInDate\")); pm.expect(a.lease_months).to.eql(6); pm.expect(a.gender).to.eql(\"Female\"); });",
                   "pm.collectionVariables.set(\"applicationId\", a.id);"
                 ]
               }
@@ -410,7 +410,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\",\n  \"move_in_date\": \"{{moveInDate}}\",\n  \"lease_months\": 6\n}",
+              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\",\n  \"move_in_date\": \"{{moveInDate}}\",\n  \"gender\": \"Female\",\n  \"lease_months\": 6\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -451,7 +451,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"move_in_date\": \"{{moveInDate}}\",\n  \"lease_months\": 6\n}",
+              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"move_in_date\": \"{{moveInDate}}\",\n  \"gender\": \"Female\",\n  \"lease_months\": 6\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -492,7 +492,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\",\n  \"move_in_date\": \"2020-01-01\",\n  \"lease_months\": 6\n}",
+              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\",\n  \"move_in_date\": \"2020-01-01\",\n  \"gender\": \"Female\",\n  \"lease_months\": 6\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -650,7 +650,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\",\n  \"move_in_date\": \"{{moveInDate}}\",\n  \"lease_months\": 6\n}",
+              "raw": "{\n  \"accommodation_id\": \"{{accommodationId}}\",\n  \"room_type\": \"{{roomType}}\",\n  \"move_in_date\": \"{{moveInDate}}\",\n  \"gender\": \"Female\",\n  \"lease_months\": 6\n}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -1,9 +1,7 @@
 -- ==========================================================================
 -- FindMyhome: Student Accommodation System, database schema (PostgreSQL)
---
 -- Every column here matches what the backend queries in src/models and
 -- src/controllers. Run it with:  npm run db:setup   (from the Backend folder)
--- Safe to run more than once: existing tables and their data are kept.
 -- ==========================================================================
 
 -- Users: students
@@ -109,6 +107,7 @@ CREATE TABLE IF NOT EXISTS applications (
   room_type         VARCHAR(20),   -- Single / Shared / Triple, chosen when applying
   move_in_date      DATE,          -- chosen when applying
   lease_months      SMALLINT,      -- chosen when applying: 3, 6, 10 or 12
+  gender            VARCHAR(10),   -- chosen when applying: Female or Male
   status_updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),  -- when the status last changed
   decision_reason   TEXT,          -- why it was rejected (automatic review)
   lease_start       DATE,          -- set automatically when approved
@@ -129,12 +128,18 @@ ALTER TABLE applications ADD COLUMN IF NOT EXISTS decision_reason TEXT;
 -- The student's chosen move-in date and lease length
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS move_in_date DATE;
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS lease_months SMALLINT;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS gender VARCHAR(10);
 
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'applications_lease_months_check') THEN
     ALTER TABLE applications
       ADD CONSTRAINT applications_lease_months_check CHECK (lease_months IN (3, 6, 10, 12));
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'applications_gender_check') THEN
+    ALTER TABLE applications
+      ADD CONSTRAINT applications_gender_check CHECK (gender IN ('Female', 'Male'));
   END IF;
 END $$;
 

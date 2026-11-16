@@ -1,12 +1,12 @@
 const pool = require("../config/database");
 
-// Submit a new application for one room type, move-in date and lease length
-const createApplication = async (studentId, accommodationId, roomType, moveInDate, leaseMonths) => {
+// Submit a new application for one room type, move-in date, lease length and gender
+const createApplication = async (studentId, accommodationId, roomType, moveInDate, leaseMonths, gender) => {
   const result = await pool.query(
-    `INSERT INTO applications (student_id, accommodation_id, room_type, move_in_date, lease_months)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO applications (student_id, accommodation_id, room_type, move_in_date, lease_months, gender)
+     VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING *`,
-    [studentId, accommodationId, roomType, moveInDate, leaseMonths]
+    [studentId, accommodationId, roomType, moveInDate, leaseMonths, gender]
   );
 
   return result.rows[0];

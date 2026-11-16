@@ -272,6 +272,8 @@ function Gallery({ title, images, onOpen }) {
 const OPEN_STATUSES = ["Pending", "Under Review", "Approved"];
 
 // Sticky price card: choose a room type and apply, or log in first
+const GENDERS = ["Female", "Male"];
+
 function ApplyCard({ accommodation }) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -281,6 +283,7 @@ function ApplyCard({ accommodation }) {
   const firstOpen = roomTypes.find(isOpen);
 
   const [roomType, setRoomType] = useState(firstOpen?.room_type ?? "");
+  const [gender, setGender] = useState("");
   const [moveInRange] = useState(() => getMoveInRange());
   const [moveIn, setMoveIn] = useState(() => getDefaultMoveIn());
   const [leaseMonths, setLeaseMonths] = useState(12);
@@ -319,6 +322,10 @@ function ApplyCard({ accommodation }) {
       setApplyError("Choose a room first.");
       return;
     }
+    if (!gender) {
+      setApplyError("Choose your gender.");
+      return;
+    }
     if (!isMoveInValid) {
       setApplyError(
         `Choose a move-in date from ${formatDateOnly(moveInRange.min)} to ${formatDateOnly(moveInRange.max)}.`
@@ -329,7 +336,7 @@ function ApplyCard({ accommodation }) {
     setApplyError("");
     setIsApplying(true);
     try {
-      await applyForAccommodation(accommodation.id, roomType, moveIn, leaseMonths);
+      await applyForAccommodation(accommodation.id, roomType, gender, moveIn, leaseMonths);
       navigate("/applications");
     } catch (error) {
       setApplyError(getErrorMessage(error, "We couldn't send your application. Please try again."));
@@ -419,6 +426,26 @@ function ApplyCard({ accommodation }) {
           </fieldset>
 
           <div className="lease-choice">
+            <fieldset className="lease-choice__months">
+              <legend className="lease-choice__label">Gender</legend>
+              <div className="chips">
+                {GENDERS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={gender === option}
+                    className={`chip${gender === option ? " is-active" : ""}`}
+                    onClick={() => {
+                      setGender(option);
+                      setApplyError("");
+                    }}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
             <label className="filter-input">
               <span className="lease-choice__label">Move-in date</span>
               <input

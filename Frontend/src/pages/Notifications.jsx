@@ -96,10 +96,8 @@ export default function Notifications() {
       <div className="dashboard-header">
         <div>
           <h1 className="dashboard-header__title">Notifications</h1>
-          {loadState === "ready" && (
-            <p className="dashboard-header__subtitle">
-              {unreadCount > 0 ? `You have ${unreadCount} unread` : "You're all caught up"}
-            </p>
+          {loadState === "ready" && unreadCount > 0 && (
+            <p className="dashboard-header__subtitle">You have {unreadCount} unread</p>
           )}
         </div>
         {loadState === "ready" && unreadCount > 0 && (

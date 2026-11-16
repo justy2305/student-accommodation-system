@@ -19,14 +19,18 @@ const toId = (value) => {
   return Number.isInteger(id) && id > 0 ? id : null;
 };
 
+// The gender options a student can choose when applying
+const GENDERS = ["Female", "Male"];
+
 // Submit an application
-// POST /api/applications  { accommodation_id, room_type, move_in_date, lease_months }
+// POST /api/applications  { accommodation_id, room_type, gender, move_in_date, lease_months }
 const createApplication = async (req, res) => {
   try {
     // The student ID comes from the verified login token
     const studentId = req.user.id;
     const accommodationId = toId(req.body.accommodation_id);
     const roomType = req.body.room_type;
+    const gender = req.body.gender;
     const moveInDate = req.body.move_in_date;
     const leaseMonths = Number(req.body.lease_months);
 
@@ -39,6 +43,12 @@ const createApplication = async (req, res) => {
     if (!accommodationModel.ROOM_TYPES.includes(roomType)) {
       return res.status(400).json({
         message: `Choose a room type: ${accommodationModel.ROOM_TYPES.join(", ")}`,
+      });
+    }
+
+    if (!GENDERS.includes(gender)) {
+      return res.status(400).json({
+        message: `Choose your gender: ${GENDERS.join(" or ")}`,
       });
     }
 
@@ -86,7 +96,8 @@ const createApplication = async (req, res) => {
       accommodationId,
       roomType,
       moveInDate,
-      leaseMonths
+      leaseMonths,
+      gender
     );
 
     // Let the student know it arrived. The application is already saved,

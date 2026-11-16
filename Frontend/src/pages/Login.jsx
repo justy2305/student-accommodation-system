@@ -14,7 +14,6 @@ const FIELD_ORDER = ["email", "password"];
 const NOTICES = {
   loginRequired: { variant: "info", text: "Please log in to continue." },
   sessionExpired: { variant: "info", text: "Your session has expired. Please log in again." },
-  loggedOut: { variant: "success", text: "You've been logged out. See you soon." },
 };
 
 export default function Login() {

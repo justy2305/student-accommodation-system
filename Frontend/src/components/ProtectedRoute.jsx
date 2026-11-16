@@ -15,7 +15,7 @@ export default function ProtectedRoute({ children }) {
   if (!user) {
     // Logged out on purpose: no "come back here" link
     if (authEvent === "loggedOut") {
-      return <Navigate to="/login" replace state={{ notice: "loggedOut" }} />;
+      return <Navigate to="/login" replace />;
     }
 
     return (

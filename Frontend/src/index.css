@@ -1,7 +1,5 @@
-/* ==========================================================================
-   FindMyhome design tokens (from the Figma file) + base styles
-   Hex values were matched by eye; confirm them in Figma (Properties → Fill).
-   ========================================================================== */
+/* FindMyhome design tokens (from the Figma file) + base styles
+   Hex values were matched by eye; confirm them in Figma (Properties → Fill).*/
 
 :root {
   /* Brand: coral red. Slightly deepened from the Figma swatch so white

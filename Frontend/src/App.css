@@ -352,9 +352,7 @@
   }
 }
 
-/* ==========================================================================
-   Login & Register
-   ========================================================================== */
+/* Login & Register */
 
 .auth-main {
   flex: 1;
@@ -414,9 +412,7 @@
   color: var(--color-text-muted);
 }
 
-/* ==========================================================================
-   Temporary pages (replaced in Phases 16, 17 and 21)
-   ========================================================================== */
+/* Temporary pages */
 
 .home-hero {
   width: 100%;
@@ -476,9 +472,7 @@
   color: var(--color-text-muted);
 }
 
-/* ==========================================================================
-   Responsive
-   ========================================================================== */
+/* Responsive*/
 
 @media (max-width: 640px) {
   .site-header__inner {
@@ -523,9 +517,7 @@
   }
 }
 
-/* ==========================================================================
-   Student dashboard (Phase 16): Figma "Student application tracking dashboard"
-   ========================================================================== */
+/* Student dashboard */
 
 /* ---------- Navbar ---------- */
 .navbar {
@@ -1969,9 +1961,7 @@
   }
 }
 
-/* ==========================================================================
-   Student portal: "My accommodation" (approved home, lease, agreement)
-   ========================================================================== */
+/* Student portal: "My accommodation" (approved home, lease, agreement)*/
 
 .home-card {
   display: flex;
@@ -2094,11 +2084,6 @@
 .lease-fact--highlight dd {
   color: var(--color-primary-hover);
 }
-
-
-
-
-
 
 /* Lease agreement status */
 .agreement {

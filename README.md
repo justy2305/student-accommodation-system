@@ -34,7 +34,7 @@ npm install
 cp .env.example .env   # then fill in your database password, JWT secret and Cloudinary keys
 npm run db:setup       # creates or updates the tables
 npm run db:seed        # adds the homes
-npm run images:upload  # optional: moves the photos to Cloudinary
+npm run images:upload  # moves the photos to Cloudinary
 npm run dev            # runs on http://localhost:5000
 ```
 
