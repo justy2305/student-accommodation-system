@@ -29,12 +29,29 @@ FindMyhome puts this in one place:
 
 | What | URL |
 |---|---|
-| **Full-stack app (open this one)** | https://findmyhome-web-production.up.railway.app |
-| API (direct) | https://findmyhome-api-production.up.railway.app |
+| Full-stack app | https://findmyhome-web-production.up.railway.app |
 | Source code | https://github.com/justy2305/student-accommodation-system |
 
 The web service serves the React app and forwards every `/api/...` request to the API, so the login cookie stays on one site.
 Easiest way to try the API from a browser or Postman: https://findmyhome-web-production.up.railway.app/api/accommodations
+
+## Screenshots
+
+**1. Find a home:** the Explore page and the search filters.
+
+![Explore page and search filters](docs/screenshots/1-find-a-home.png)
+
+**2. View a home and apply:** home details, rooms and prices, and the apply card.
+
+![Home details and apply card](docs/screenshots/2-view-and-apply.png)
+
+**3. Track the application:** pending, approved with the lease ready to sign, and the notifications.
+
+![Application status and notifications](docs/screenshots/3-track-application.png)
+
+**4. Account and mobile:** registration, profile, and the mobile layout.
+
+![Registration, profile and mobile views](docs/screenshots/4-account-and-mobile.png)
 
 ## How it works
 
